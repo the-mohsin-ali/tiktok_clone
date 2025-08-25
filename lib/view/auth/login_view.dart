@@ -7,7 +7,9 @@ import 'package:tiktok_clone/constants/widgets/round_button.dart';
 import 'package:tiktok_clone/view/auth/auth_controller.dart';
 
 class LoginView extends GetView<AuthController> {
-  const LoginView({super.key});
+  LoginView({super.key});
+
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +18,7 @@ class LoginView extends GetView<AuthController> {
         child: Padding(
           padding: EdgeInsetsGeometry.all(20),
           child: Form(
-            key: controller.formKey,
+            key: formKey,
             child: Column(
               children: [
                 Row(
@@ -24,7 +26,10 @@ class LoginView extends GetView<AuthController> {
                   children: [
                     Text(
                       'Login to your account',
-                      style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -36,9 +41,11 @@ class LoginView extends GetView<AuthController> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: controller.emailController,
-                  decoration: Utils.inputDecoration(title: 'eg emmanuel@gmail.com'),
+                  decoration: Utils.inputDecoration(
+                    title: 'eg emmanuel@gmail.com',
+                  ),
                   validator: (value) {
-                    if(value!.isEmpty){
+                    if (value!.isEmpty) {
                       return 'Please enter your email';
                     }
                     return null;
@@ -54,7 +61,7 @@ class LoginView extends GetView<AuthController> {
                   obscureText: true,
                   decoration: Utils.inputDecoration(title: '********'),
                   validator: (value) {
-                    if(value!.isEmpty){
+                    if (value!.isEmpty) {
                       return 'Please enter your password';
                     }
                     return null;
@@ -65,19 +72,31 @@ class LoginView extends GetView<AuthController> {
                   alignment: Alignment.centerRight,
                   child: Text(
                     'Forgot Password?',
-                    style: TextStyle(fontSize: 15, color: AppColor.buttonActiveColor),
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: AppColor.buttonActiveColor,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 30),
-                // RoundButton(
-                //   loading: false,
-                //   title: 'Login',
-                //   onPress: () {
-                //     if(formKey.currentState!.validate()){
-                //       Get.find<AuthController>().login(emailController.text, passwordController.text);
-                //     }
-                //   },
-                // ),
+                Obx((){
+                  final isActive = controller.isFormFilled.value;
+                  return RoundButton(
+                    isLoading: controller.isLoading.value,
+                    text: 'Login',
+                    onPressed: () {
+                      if(formKey.currentState!.validate()){
+                        controller.login();
+                      }else{
+                        Utils.snackBar('Error', 'Form not valid');
+                        print("invalid form at signup");
+                      }
+                    },
+                    color: isActive ? 
+                        AppColor.buttonActiveColor : AppColor.buttonInactiveColor,
+                  );
+                }
+                ),
                 const Spacer(),
                 Align(
                   alignment: Alignment.center,
@@ -90,6 +109,7 @@ class LoginView extends GetView<AuthController> {
                       ),
                       TextButton(
                         onPressed: () {
+                          controller.clearFields();
                           Get.offNamed(RoutesNames.signup);
                         },
                         child: Text(

@@ -1,8 +1,9 @@
 import 'package:get/get.dart';
 import 'package:tiktok_clone/constants/routes/routes_names.dart';
 import 'package:tiktok_clone/view/SplashScreen.dart';
-import 'package:tiktok_clone/view/auth/login_screen.dart';
+import 'package:tiktok_clone/view/auth/login_view.dart';
 import 'package:tiktok_clone/view/auth/signup.dart';
+import 'package:tiktok_clone/view/feed/home_screen.dart';
 
 class AppRoutes {
   static List<GetPage> routes = [
@@ -22,7 +23,14 @@ class AppRoutes {
 
     GetPage(
       name: RoutesNames.login,
-      page: () => const LoginView(),
+      page: () => LoginView(),
+      transition: Transition.fade,
+      transitionDuration: Duration(milliseconds: 250),
+    ),
+
+    GetPage(
+      name: RoutesNames.home,
+      page: () => HomeScreen(),
       transition: Transition.fade,
       transitionDuration: Duration(milliseconds: 250),
     ),

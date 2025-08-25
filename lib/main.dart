@@ -5,11 +5,13 @@ import 'package:tiktok_clone/constants/routes/app_routes.dart';
 import 'package:tiktok_clone/firebase_options.dart';
 import 'package:tiktok_clone/view/SplashScreen.dart';
 import 'package:tiktok_clone/view/auth/auth_controller.dart';
+import 'package:tiktok_clone/view/feed/home_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   Get.put(AuthController());
+  Get.put(HomeController());
   runApp(const MyApp());
 }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tiktok_clone/view/splash_service.dart';
+import 'package:tiktok_clone/services/splash_service.dart';
 
 class Splashscreen extends StatefulWidget {
   const Splashscreen({super.key});
