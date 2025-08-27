@@ -13,6 +13,8 @@ import 'package:tiktok_clone/models/user_model.dart';
 import 'package:tiktok_clone/services/shared_prefs.dart';
 
 class AuthController extends GetxController {
+
+  
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController usernameController = TextEditingController();
@@ -196,6 +198,7 @@ class AuthController extends GetxController {
             .doc(uid)
             .get();
         if (userDoc.exists) {
+
           print('value in userDoc: ${userDoc.data()}');
 
           UserModel user = UserModel.fromMap(userDoc.data()!);
@@ -206,6 +209,7 @@ class AuthController extends GetxController {
           print('User ID: ${await SharedPrefs.getUserId()}');
           print('Email: ${await SharedPrefs.getUserEmail()}');
           print('User Name: ${await SharedPrefs.getUserName()}');
+          print('User photo url: ${await SharedPrefs.getProfileUrl()}');
           print('User isLoggedIn: ${await SharedPrefs.getIsLoggedIn()}');
         } else {
           print('User document does not exist');

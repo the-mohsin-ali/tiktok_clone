@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone/constants/color/app_color.dart';
 import 'package:tiktok_clone/constants/routes/routes_names.dart';
@@ -16,7 +17,7 @@ class LoginView extends GetView<AuthController> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsetsGeometry.all(20),
+          padding: EdgeInsetsGeometry.all(20.r),
           child: Form(
             key: formKey,
             child: Column(
@@ -27,18 +28,18 @@ class LoginView extends GetView<AuthController> {
                     Text(
                       'Login to your account',
                       style: TextStyle(
-                        fontSize: 30,
+                        fontSize: 25.sp,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 60),
+                SizedBox(height: 60.h),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Email', style: TextStyle(fontSize: 15)),
+                  child: Text('Email', style: TextStyle(fontSize: 15.sp)),
                 ),
-                const SizedBox(height: 20),
+                // SizedBox(height: 20.h),
                 TextFormField(
                   controller: controller.emailController,
                   decoration: Utils.inputDecoration(
@@ -51,10 +52,10 @@ class LoginView extends GetView<AuthController> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: 30.h),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Password', style: TextStyle(fontSize: 15)),
+                  child: Text('Password', style: TextStyle(fontSize: 15.sp)),
                 ),
                 TextFormField(
                   controller: controller.passwordController,
@@ -67,36 +68,36 @@ class LoginView extends GetView<AuthController> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: 20.h),
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
                     'Forgot Password?',
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 15.sp,
                       color: AppColor.buttonActiveColor,
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
-                Obx((){
+                SizedBox(height: 30.h),
+                Obx(() {
                   final isActive = controller.isFormFilled.value;
                   return RoundButton(
                     isLoading: controller.isLoading.value,
                     text: 'Login',
                     onPressed: () {
-                      if(formKey.currentState!.validate()){
+                      if (formKey.currentState!.validate()) {
                         controller.login();
-                      }else{
+                      } else {
                         Utils.snackBar('Error', 'Form not valid');
                         print("invalid form at signup");
                       }
                     },
-                    color: isActive ? 
-                        AppColor.buttonActiveColor : AppColor.buttonInactiveColor,
+                    color: isActive
+                        ? AppColor.buttonActiveColor
+                        : AppColor.buttonInactiveColor,
                   );
-                }
-                ),
+                }),
                 const Spacer(),
                 Align(
                   alignment: Alignment.center,
@@ -105,7 +106,7 @@ class LoginView extends GetView<AuthController> {
                     children: [
                       Text(
                         'Don\'t have an account?',
-                        style: TextStyle(fontSize: 15),
+                        style: TextStyle(fontSize: 15.sp),
                       ),
                       TextButton(
                         onPressed: () {
@@ -115,7 +116,7 @@ class LoginView extends GetView<AuthController> {
                         child: Text(
                           'Sign Up',
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: 15.sp,
                             color: AppColor.buttonActiveColor,
                           ),
                         ),

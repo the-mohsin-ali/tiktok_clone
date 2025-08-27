@@ -25,14 +25,14 @@ class _SplashscreenState extends State<Splashscreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Image.asset(
-              'images/app_icon.png',
+              'assets/images/app_icon.png',
               fit: BoxFit.cover,
               height: 100,
               width: 100,
             ),
             const SizedBox(height: 20),
             Image.asset(
-              'images/TikTok_Logo.png',
+              'assets/images/TikTok_Logo.png',
               fit: BoxFit.cover,
               height: 50,
             ),
