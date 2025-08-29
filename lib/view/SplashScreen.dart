@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:tiktok_clone/services/splash_service.dart';
 
 class Splashscreen extends StatefulWidget {
@@ -24,18 +25,9 @@ class _SplashscreenState extends State<Splashscreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/images/app_icon.png',
-              fit: BoxFit.cover,
-              height: 100,
-              width: 100,
-            ),
-            const SizedBox(height: 20),
-            Image.asset(
-              'assets/images/TikTok_Logo.png',
-              fit: BoxFit.cover,
-              height: 50,
-            ),
+            Image.asset('assets/images/app_icon.png', fit: BoxFit.cover, height: 60.h, width: 60.h),
+            SizedBox(height: 10.h),
+            Image.asset('assets/images/TikTok_Logo.png', fit: BoxFit.cover, height: 20.h),
           ],
         ),
       ),

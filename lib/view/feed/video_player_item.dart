@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -12,35 +11,35 @@ class VideoplayerItem extends StatefulWidget {
 
 class _VideoplayerItemState extends State<VideoplayerItem> {
 
-  late VideoPlayerController _controller;
+  late VideoPlayerController _videoPlayerController;
 
   @override
   void initState(){
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+    _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
     ..initialize().then((_){
       setState(() {});
-      _controller.play();
-      _controller.setLooping(true);
+      _videoPlayerController.play();
+      _videoPlayerController.setLooping(true);
     });
   }
 
   @override
   void dispose(){
-    _controller.dispose();
+    _videoPlayerController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return _controller.value.isInitialized
+    return _videoPlayerController.value.isInitialized
     ? SizedBox.expand(
       child: FittedBox(
         fit: BoxFit.cover,
         child: SizedBox(
-          width: _controller.value.size.width,
-          height: _controller.value.size.height,
-          child: VideoPlayer(_controller),
+          width: _videoPlayerController.value.size.width,
+          height: _videoPlayerController.value.size.height,
+          child: VideoPlayer(_videoPlayerController),
         ),
       ),
     )

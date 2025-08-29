@@ -155,7 +155,7 @@ class AuthController extends GetxController {
           uid: userCredential.user!.uid,
           email: email,
           userName: userName,
-          profilePhoto: imageUrl,
+          profilePhoto: imageUrl, followers: [], following: [], likes: 0,
         );
 
         await FirebaseFirestore.instance

@@ -8,7 +8,6 @@ import 'package:tiktok_clone/view/auth/auth_controller.dart';
 import 'package:tiktok_clone/view/feed/home_controller.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
@@ -32,17 +31,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      
-      builder: (context, child)=> GetMaterialApp(
+      builder: (context, child) => GetMaterialApp(
         title: 'Flutter Demo',
         initialBinding: InitialBinding(),
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        ),
+        theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
         darkTheme: ThemeData.dark(),
         themeMode: ThemeMode.light,
         getPages: AppRoutes.routes,
-        home: Splashscreen(),
+        home: Splashscreen()
       ),
     );
   }

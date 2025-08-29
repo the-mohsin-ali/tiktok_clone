@@ -41,59 +41,60 @@ class _PreviewVideoScreenState extends State<PreviewVideoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Preview'),
-      ),
-      body: Center(
-        child: _videoController.value.isInitialized
-            ? Stack(
-                children: [
-                  AspectRatio(
-                    aspectRatio: _videoController.value.aspectRatio,
-                    child: VideoPlayer(_videoController),
-                  ),
-                  Positioned(
-                    bottom: 20.h,
-                    left: 20.w,
-                    child: FloatingActionButton(
-                      heroTag: 'dismiss',
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Icon(Icons.close),
+      appBar: AppBar(automaticallyImplyLeading: false, title: const Text('Preview')),
+      body: SafeArea(
+        child: Center(
+          child: _videoController.value.isInitialized
+              ? Stack(
+                  children: [
+                    AspectRatio(aspectRatio: _videoController.value.aspectRatio, child: VideoPlayer(_videoController)),
+                    Positioned(
+                      bottom: 20.h,
+                      left: 20.w,
+                      child: FloatingActionButton(
+                        heroTag: 'dismiss',
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Icon(Icons.close),
+                      ),
                     ),
-                  ),
-                  Positioned(
-                    bottom: 20.h,
-                    right: 20.w,
-                    child: FloatingActionButton(
-                      onPressed: () async {
-                        bool success = await controller.uploadAndSave(
-                          widget.videoPath,
-                        );
-                        if (success) {
-                          if (mounted && _videoController.value.isInitialized) {
-                            _videoController.pause();
-                            _videoController.dispose();
-                          }
-                          navigator?.pop();
-                          navController.changeTabIndex(1);
+                    Obx(
+                      () => controller.isUploading.value
+                          ? Positioned.fill(
+                              child: Container(
+                                color: Colors.black45,
+                                child: const Center(child: CircularProgressIndicator()),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
 
-                        } else {
-                          Utils.snackBar(
-                            'Error',
-                            'error uploading and saving video',
-                          );
-                        }
-                      },
-                      heroTag: 'confirm',
-                      child: Icon(Icons.check),
+                    Positioned(
+                      bottom: 20.h,
+                      right: 20.w,
+                      child: FloatingActionButton(
+                        onPressed: () async {
+                          bool success = await controller.uploadAndSave(widget.videoPath);
+                          if (success) {
+                            if (mounted && _videoController.value.isInitialized) {
+                              _videoController.pause();
+                              _videoController.dispose();
+                            }
+                            navigator?.pop();
+                            navController.changeTabIndex(1);
+                          } else {
+                            Utils.snackBar('Error', 'error uploading and saving video');
+                          }
+                        },
+                        heroTag: 'confirm',
+                        child: Icon(Icons.check),
+                      ),
                     ),
-                  ),
-                ],
-              )
-            : Center(child: CircularProgressIndicator()),
+                  ],
+                )
+              : Center(child: CircularProgressIndicator()),
+        ),
       ),
     );
   }

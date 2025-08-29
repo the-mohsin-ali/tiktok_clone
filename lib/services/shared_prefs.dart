@@ -17,17 +17,17 @@ class SharedPrefs {
     await sp.setBool(isLoggedIn, true);
   }
 
-  static Future<String?> getUserId() async{
+  static Future<String> getUserId() async{
     SharedPreferences sp = await SharedPreferences.getInstance();
-    return sp.getString(userId);
+    return sp.getString(userId) ?? '';
   }
-  static Future<String?> getUserName() async{
+  static Future<String> getUserName() async{
     SharedPreferences sp = await SharedPreferences.getInstance();
-    return sp.getString(userName);
+    return sp.getString(userName) ?? '';
   }
-  static Future<String?> getUserEmail() async{
+  static Future<String> getUserEmail() async{
     SharedPreferences sp = await SharedPreferences.getInstance();
-    return sp.getString(userEmail);
+    return sp.getString(userEmail) ?? '';
   }
   static Future<String?> getProfileUrl() async{
     SharedPreferences sp = await SharedPreferences.getInstance();

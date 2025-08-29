@@ -24,8 +24,12 @@ class VideoModel{
   }  
 
   factory VideoModel.fromJson(Map<String, dynamic> json){
-    return VideoModel(videoUrl: json["videoUrl"], uid: json["uid"], profilePhoto: json["profilePhoto"], likeCount: json["likeCount"] ?? 0, likedBy: List<String>.from(json["likedBy"] ?? []), commentCount: json["commentCount"] ?? 0, uploadedAt: (json["uploadedAt"] as Timestamp).toDate());
+    return VideoModel(videoUrl: json["videoUrl"], uid: json["uid"], profilePhoto: json["profilePhoto"], likeCount: json["likeCount"] ?? 0, likedBy: (json["likedBy"] as List?)?.map((e) => e.toString()).toList() ?? [], commentCount: json["commentCount"] ?? 0, uploadedAt: (json["uploadedAt"] as Timestamp).toDate());
   }
 
-  
+  factory VideoModel.fromDocument(DocumentSnapshot snapshot){
+    final data = snapshot.data() as Map<String, dynamic>;
+    return VideoModel(videoUrl: data['videoUrl'], uid: data['uid'], profilePhoto: data['profilePhoto'], uploadedAt: (data['uploadedAt'] as Timestamp).toDate(), commentCount: data['commentCount'], likeCount: data['likeCount'], likedBy: (data["likedBy"] as List?)?.map((e) => e.toString()).toList() ?? [],);
+  }
+
 }

@@ -55,10 +55,10 @@ class PreviewScreenController extends GetxController {
             .collection("videos")
             .add(videoModel.toJson());
 
-        await FirebaseFirestore.instance.collection('users').doc(uid).update({
-          'videosPosted' : FieldValue.arrayUnion([videoUrl]),
-          'lastUploadTime' : DateTime.now()
-        });
+        // await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        //   'videosPosted' : FieldValue.arrayUnion([videoUrl]),
+        //   'lastUploadTime' : DateTime.now()
+        // });
 
         return true;
       }
