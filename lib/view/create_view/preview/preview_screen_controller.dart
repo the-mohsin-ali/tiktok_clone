@@ -48,7 +48,7 @@ class PreviewScreenController extends GetxController {
           videoUrl: videoUrl,
           uid: uid,
           profilePhoto: profilePhoto,
-          uploadedAt: DateTime.now(),
+          uploadedAt: DateTime.now(), videoId: '',
         );
 
         await FirebaseFirestore.instance

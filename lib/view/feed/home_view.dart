@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone/constants/color/app_color.dart';
+import 'package:tiktok_clone/services/shared_prefs.dart';
+import 'package:tiktok_clone/view/feed/comments/comments_bottomsheet.dart';
 import 'package:tiktok_clone/view/feed/home_controller.dart';
 import 'package:tiktok_clone/view/feed/video_player_item.dart';
 
@@ -12,6 +14,8 @@ class HomeView extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     bool isFetching = false;
+    // final video = controller.videos.value;
+
     return Obx(() {
       final videos = controller.videos;
       print('value of videos in home_view: $videos');
@@ -19,16 +23,6 @@ class HomeView extends GetView<HomeController> {
       return Theme(
         data: ThemeData.dark(),
         child: Scaffold(
-          appBar: AppBar(
-            actions: [
-              IconButton(
-                onPressed: () {
-                  controller.logout();
-                },
-                icon: Icon(Icons.logout),
-              ),
-            ],
-          ),
           body: videos.isEmpty
               ? Center(child: CircularProgressIndicator())
               : NotificationListener<ScrollNotification>(
@@ -38,9 +32,9 @@ class HomeView extends GetView<HomeController> {
                         controller.pageController.page == 0 &&
                         !controller.isLoading.value &&
                         !isFetching) {
-                      isFetching = true;    
+                      isFetching = true;
                       print("vertical drag down triggered: fetching videos...");
-                      controller.fetchVideos().whenComplete((){
+                      controller.fetchVideos().whenComplete(() {
                         isFetching = false;
                       });
                     }
@@ -52,8 +46,15 @@ class HomeView extends GetView<HomeController> {
                     itemCount: videos.length,
                     itemBuilder: (context, index) {
                       final video = videos[index];
+                      final currentUid = SharedPrefs.cachedUid;
+                      final isLiked = video.likedBy.contains(currentUid);
+
+                      print("User ID: $currentUid");
+                      print("LikedBy List: ${video.likedBy}");
+                      print("IsLiked: $isLiked");
 
                       return Stack(
+                        key: ValueKey(video.videoId),
                         children: [
                           VideoplayerItem(key: ValueKey(video.videoUrl), videoUrl: video.videoUrl),
 
@@ -71,12 +72,17 @@ class HomeView extends GetView<HomeController> {
                                       ? NetworkImage(video.profilePhoto!)
                                       : AssetImage('assets/images/default_profile.jpg') as ImageProvider,
                                 ),
-                                SizedBox(height: 16.h),
-                                SvgPicture.asset(
-                                  'assets/icons/like_icon.svg',
-                                  width: 32,
-                                  height: 32,
-                                  colorFilter: ColorFilter.mode(AppColor.secondaryColor, BlendMode.srcIn),
+                                SizedBox(height: 10.h),
+                                InkWell(
+                                  onTap: () {
+                                    controller.addLike(video);
+                                  },
+                                  child: Image.asset(
+                                    isLiked ? 'assets/icons/like_icon_filled.png' : 'assets/icons/like_icon.png',
+                                    key: ValueKey(isLiked),
+                                    width: 42.w,
+                                    height: 42.h,
+                                  ),
                                 ),
                                 Text(
                                   '${video.likeCount}',
@@ -86,12 +92,24 @@ class HomeView extends GetView<HomeController> {
                                     fontWeight: FontWeight.normal,
                                   ),
                                 ),
-                                SizedBox(height: 16.h),
-                                SvgPicture.asset(
-                                  'assets/icons/comment_icon.svg',
-                                  width: 32,
-                                  height: 32,
-                                  colorFilter: ColorFilter.mode(AppColor.secondaryColor, BlendMode.srcIn),
+                                SizedBox(height: 10.h),
+                                InkWell(
+                                  onTap: () {
+                                    print("comment button tapped");
+                                    showModalBottomSheet(
+                                      isScrollControlled: true,
+                                      context: context,
+                                      builder: (context) {
+                                        return CommentsBottomsheet(video: video);
+                                      },
+                                    );
+                                  },
+                                  child: SvgPicture.asset(
+                                    'assets/icons/comment_icon.svg',
+                                    width: 38.w,
+                                    height: 38.h,
+                                    colorFilter: ColorFilter.mode(AppColor.secondaryColor, BlendMode.srcIn),
+                                  ),
                                 ),
                                 Text(
                                   '${video.commentCount}',
@@ -101,11 +119,11 @@ class HomeView extends GetView<HomeController> {
                                     fontWeight: FontWeight.normal,
                                   ),
                                 ),
-                                SizedBox(height: 16.h),
+                                SizedBox(height: 10.h),
                                 SvgPicture.asset(
                                   'assets/icons/share_icon.svg',
-                                  width: 32,
-                                  height: 32,
+                                  width: 32.w,
+                                  height: 32.h,
                                   colorFilter: ColorFilter.mode(AppColor.secondaryColor, BlendMode.srcIn),
                                 ),
                                 Text(
@@ -119,16 +137,13 @@ class HomeView extends GetView<HomeController> {
                               ],
                             ),
                           ),
-
                           Obx(
-                            () => controller.isLoading.value
-                                ? Positioned(
-                                    top: 50,
-                                    right: 0,
-                                    left: 0,
-                                    child: Center(child: CircularProgressIndicator()),
-                                  )
-                                : SizedBox.shrink(),
+                            () => AnimatedAlign(
+                              duration: Durations.extralong4,
+                              alignment: controller.isLoading.value ? Alignment.center : Alignment(0, -2),
+
+                              child: CircularProgressIndicator(color: AppColor.buttonActiveColor),
+                            ),
                           ),
                         ],
                       );
