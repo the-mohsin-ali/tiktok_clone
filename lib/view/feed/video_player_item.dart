@@ -10,39 +10,40 @@ class VideoplayerItem extends StatefulWidget {
 }
 
 class _VideoplayerItemState extends State<VideoplayerItem> {
-
   late VideoPlayerController _videoPlayerController;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
+    // if (_videoPlayerController != null) {
+    //   await _videoPlayerController.dispose();
+    // }
     _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-    ..initialize().then((_){
-      setState(() {});
-      _videoPlayerController.play();
-      _videoPlayerController.setLooping(true);
-    });
+      ..initialize().then((_) {
+        setState(() {});
+        _videoPlayerController.play();
+        _videoPlayerController.setLooping(true);
+      });
   }
 
   @override
-  void dispose(){
+  void dispose() {
     _videoPlayerController.dispose();
     super.dispose();
+  }
+
+  void _togglePlayPause() {
+    if (_videoPlayerController.value.isPlaying) {
+      _videoPlayerController.pause();
+    } else {
+      _videoPlayerController.play();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return _videoPlayerController.value.isInitialized
-    ? SizedBox.expand(
-      child: FittedBox(
-        fit: BoxFit.cover,
-        child: SizedBox(
-          width: _videoPlayerController.value.size.width,
-          height: _videoPlayerController.value.size.height,
-          child: VideoPlayer(_videoPlayerController),
-        ),
-      ),
-    )
-    : Center(child: CircularProgressIndicator(),);
+        ? GestureDetector(onTap: _togglePlayPause, child: VideoPlayer(_videoPlayerController))
+        : Center(child: CircularProgressIndicator());
   }
 }

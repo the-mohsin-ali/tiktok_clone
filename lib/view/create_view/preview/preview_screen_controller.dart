@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:tiktok_clone/models/video_model.dart';
 import 'package:tiktok_clone/services/shared_prefs.dart';
 
-class PreviewScreenController extends GetxController {
+class PreviewScreenController extends GetxController { 
   var isUploading = false.obs;
 
   Future<String?> getVideoUrl(String filePath) async {
@@ -41,14 +41,18 @@ class PreviewScreenController extends GetxController {
       print("Value in videoUrl: $videoUrl");
       String? uid = await SharedPrefs.getUserId();
       print("Value in uid: $uid");
-      String? profilePhoto = await SharedPrefs.getProfileUrl();
+      
+      final userData = await SharedPrefs.getUserFromPrefs();
+      String userName = userData!.userName;
+      String? profilePhoto = userData.profilePhoto;
+
       print("Value in profilePhoto: $profilePhoto");
       if (videoUrl != null && uid != null) {
         VideoModel videoModel = VideoModel(
           videoUrl: videoUrl,
           uid: uid,
           profilePhoto: profilePhoto,
-          uploadedAt: DateTime.now(), videoId: '',
+          uploadedAt: DateTime.now(), videoId: '', videoTitle: '', userName: userName,
         );
 
         await FirebaseFirestore.instance

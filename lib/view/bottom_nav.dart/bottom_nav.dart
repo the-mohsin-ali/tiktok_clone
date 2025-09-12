@@ -6,6 +6,11 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone/constants/color/app_color.dart';
 import 'package:tiktok_clone/view/bottom_nav.dart/bottom_nav_controller.dart';
+import 'package:tiktok_clone/view/create_view/create_view.dart';
+import 'package:tiktok_clone/view/feed/home_view.dart';
+import 'package:tiktok_clone/view/friends_view/friends_view.dart';
+import 'package:tiktok_clone/view/inbox_view/inbox_view.dart';
+import 'package:tiktok_clone/view/profile_view/profile_view.dart';
 
 class BottomNav extends GetView<BottomNavController> {
   const BottomNav({super.key});
@@ -28,7 +33,24 @@ class BottomNav extends GetView<BottomNavController> {
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         body: Obx(() => controller.pages[controller.selectedTabIndex.value]),
+        // body: Obx(() {
+        //   switch (controller.selectedTabIndex.value) {
+        //     case 0:
+        //       return HomeView();
+        //     case 1:
+        //       return FriendsView();
+        //     case 2:
+        //       return CreateView();
+        //     case 3:
+        //       return InboxView();
+        //     case 4:
+        //       return ProfileView();
+        //     default:
+        //       return SizedBox.shrink();
+        //   }
+        // }),
         floatingActionButton: FloatingActionButton(
           heroTag: 'bottom_nav_fab',
           onPressed: () {

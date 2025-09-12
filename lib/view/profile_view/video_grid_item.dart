@@ -2,13 +2,15 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:tiktok_clone/interfaces/video_list_controller.dart';
 import 'package:tiktok_clone/view/profile_view/video_details/video_details_view.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
 class VideoGridItem extends StatefulWidget {
   final String videoUrl;
   final int index;
-  const VideoGridItem({super.key, required this.videoUrl, required this.index});
+  final VideoListController controller;
+  const VideoGridItem({super.key, required this.videoUrl, required this.index, required this.controller});
 
   @override
   State<VideoGridItem> createState() => _VideoGridItemState();
@@ -42,7 +44,7 @@ class _VideoGridItemState extends State<VideoGridItem> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Get.to(() => VideoDetailsView(initialIndex: widget.index));
+        Get.to(() => VideoDetailsView(initialIndex: widget.index, controller: widget.controller,));
       },
       child: _thumbnailBytes != null
           ? Stack(

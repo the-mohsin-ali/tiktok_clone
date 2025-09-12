@@ -13,8 +13,6 @@ import 'package:tiktok_clone/models/user_model.dart';
 import 'package:tiktok_clone/services/shared_prefs.dart';
 
 class AuthController extends GetxController {
-
-  
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController usernameController = TextEditingController();
@@ -22,12 +20,8 @@ class AuthController extends GetxController {
   var isLoading = false.obs;
   final isFormFilled = false.obs;
   final FirebaseAuth auth = FirebaseAuth.instance;
-  final Rx<ImageProvider> pickedImage = Rx<ImageProvider>(
-    AssetImage('images/default_profile.jpg'),
-  );
+  final Rx<ImageProvider> pickedImage = Rx<ImageProvider>(AssetImage('images/default_profile.jpg'));
   final Rx<File?> profileImageFile = Rx<File?>(null);
-
-  
 
   @override
   void onInit() {
@@ -52,16 +46,13 @@ class AuthController extends GetxController {
 
   void _checkSignupFormStatus() {
     final filled =
-        emailController.text.isNotEmpty &&
-        passwordController.text.isNotEmpty &&
-        usernameController.text.isNotEmpty;
+        emailController.text.isNotEmpty && passwordController.text.isNotEmpty && usernameController.text.isNotEmpty;
     isFormFilled.value = filled;
     print('Signup Form filled status: $filled');
   }
 
   void _checkLoginFormStatus() {
-    final filled =
-        emailController.text.isNotEmpty && passwordController.text.isNotEmpty;
+    final filled = emailController.text.isNotEmpty && passwordController.text.isNotEmpty;
     isFormFilled.value = filled;
     print('Signup Form filled status: $filled');
   }
@@ -92,9 +83,7 @@ class AuthController extends GetxController {
       const cloudName = 'dlvhzlppm';
       const presetName = 'prof_picture';
 
-      final url = Uri.parse(
-        'https://api.cloudinary.com/v1_1/$cloudName/upload',
-      );
+      final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/upload');
       final request = http.MultipartRequest('POST', url)
         ..fields['upload_preset'] = presetName
         ..files.add(await http.MultipartFile.fromPath('file', file.path));
@@ -126,10 +115,7 @@ class AuthController extends GetxController {
       String password = passwordController.text.trim();
       String userName = usernameController.text.trim();
 
-      UserCredential userCredential = await auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await auth.createUserWithEmailAndPassword(email: email, password: password);
 
       // print("user id generated: ${userCredential.user?.uid}");
 
@@ -137,9 +123,7 @@ class AuthController extends GetxController {
         final uid = userCredential.user!.uid;
         print('User registered successfully: $uid');
         String? imageUrl;
-        print(
-          "printing the value for profileImageFile.value: ${profileImageFile.value}",
-        );
+        print("printing the value for profileImageFile.value: ${profileImageFile.value}");
         if (profileImageFile.value != null) {
           try {
             imageUrl = await uploadProfileImage(profileImageFile.value!, uid);
@@ -155,13 +139,13 @@ class AuthController extends GetxController {
           uid: userCredential.user!.uid,
           email: email,
           userName: userName,
-          profilePhoto: imageUrl, followers: [], following: [], likes: 0,
+          profilePhoto: imageUrl,
+          followers: [],
+          following: [],
+          likes: 0,
         );
 
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .set(userModel.toMap());
+        await FirebaseFirestore.instance.collection('users').doc(uid).set(userModel.toMap());
         Utils.snackBar('Success', 'Account created successfully');
         clearFields();
         Get.offAllNamed('/login');
@@ -183,34 +167,33 @@ class AuthController extends GetxController {
     try {
       String email = emailController.text.trim();
       String password = passwordController.text.trim();
-      UserCredential userCredential = await auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await auth.signInWithEmailAndPassword(email: email, password: password);
       User? user = userCredential.user;
       print("user data at login : $user");
       if (user != null) {
         String uid = user.uid;
 
-        DocumentSnapshot<Map<String, dynamic>> userDoc = await FirebaseFirestore
-            .instance
+        DocumentSnapshot<Map<String, dynamic>> userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(uid)
             .get();
         if (userDoc.exists) {
-
           print('value in userDoc: ${userDoc.data()}');
 
           UserModel user = UserModel.fromMap(userDoc.data()!);
 
           await SharedPrefs.saveUserData(user);
 
-          print('User Data saved in login: ');
-          print('User ID: ${await SharedPrefs.getUserId()}');
-          print('Email: ${await SharedPrefs.getUserEmail()}');
-          print('User Name: ${await SharedPrefs.getUserName()}');
-          print('User photo url: ${await SharedPrefs.getProfileUrl()}');
-          print('User isLoggedIn: ${await SharedPrefs.getIsLoggedIn()}');
+          final userData = await SharedPrefs.getUserFromPrefs();
+
+          print(
+            '''User Data saved in login: 
+            User ID: ${await SharedPrefs.getUserId()}
+            Email: ${userData?.email}
+            User Name: ${userData?.userName}
+            User photo url: ${userData?.profilePhoto}
+            User isLoggedIn: ${await SharedPrefs.getIsLoggedIn()}''',
+          );
         } else {
           print('User document does not exist');
           return;

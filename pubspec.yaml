@@ -50,6 +50,8 @@ dependencies:
   path: ^1.9.1
   path_provider: ^2.1.5
   video_thumbnail: ^0.5.6
+  share_plus: ^11.1.0
+  timeago: ^3.7.1
 
 dev_dependencies:
   flutter_test:
@@ -97,6 +99,28 @@ flutter:
           weight: 400
         - asset: assets/fonts/proximanovacond-thin.otf
           weight: 700
+        # - asset: assets/fonts/proximanovaexcn-black.otf
+        #   weight: 900
+        - asset: assets/fonts/proximanovaexcn-bold.otf
+          weight: 900
+
+    - family: TikTokSansExpanded
+      fonts:
+        - asset: assets/fonts/TikTokSans_24pt_Expanded-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/TikTokSans_24pt_Expanded-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/TikTokSans_24pt_Expanded-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/TikTokSans_24pt_SemiCondensed-Regular.ttf
+          weight: 400
+
+    - family: TikTokSansSemiCondensed
+      fonts:
+        - asset: assets/fonts/TikTokSans_24pt_SemiCondensed-Regular.ttf
+          weight: 400
+
+
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro

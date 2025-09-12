@@ -4,10 +4,10 @@ import 'package:get/get.dart';
 import 'package:tiktok_clone/view/profile_view/profile_view_controller.dart';
 import 'package:tiktok_clone/view/profile_view/video_grid_item.dart';
 
-class ProfileView extends StatelessWidget {
+class ProfileView extends GetView<ProfileViewController> {
   ProfileView({super.key});
 
-  final ProfileViewController controller = Get.put(ProfileViewController());
+  // final ProfileViewController controller = Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +18,7 @@ class ProfileView extends StatelessWidget {
         title: Obx(
           () => Text(
             controller.userName.value,
-            style: TextStyle(fontFamily: 'ProximaNova', fontWeight: FontWeight.bold),
+            style: TextStyle(fontFamily: 'TikTokSansExpanded', fontWeight: FontWeight.w400),
           ),
         ),
         centerTitle: true,
@@ -55,7 +55,7 @@ class ProfileView extends StatelessWidget {
                     children: [
                       _buildStat(user.followingCount, 'Following'),
                       _buildStat(user.followersCount, 'Followers'),
-                      _buildStat(user.likes, 'Likes'),
+                      _buildStat(controller.totalLikes.value, 'Likes'),
                     ],
                   ),
                 ],
@@ -105,7 +105,7 @@ class ProfileView extends StatelessWidget {
         ),
         itemBuilder: (context, index) {
           final video = videos[index];
-          return VideoGridItem(videoUrl: video.videoUrl, index: index);
+          return VideoGridItem(videoUrl: video.videoUrl, index: index, controller: Get.find<ProfileViewController>(),);
         },
       ),
     );

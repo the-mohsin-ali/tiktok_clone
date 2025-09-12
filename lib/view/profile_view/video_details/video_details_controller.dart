@@ -5,5 +5,5 @@ class VideoDetailsController extends GetxController{
 
   Future<void> addLike() async {
     
-  }
+  } 
 }
