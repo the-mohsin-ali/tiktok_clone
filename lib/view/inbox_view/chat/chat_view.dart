@@ -1,85 +1,207 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
+import 'package:tiktok_clone/constants/widgets/message_bubble.dart';
+import 'package:tiktok_clone/view/inbox_view/chat/attatchment_options_sheet.dart';
 import 'package:tiktok_clone/view/inbox_view/chat/chat_view_controller.dart';
 
-class ChatView extends StatelessWidget {
-  final ChatController controller = Get.put(ChatController(Get.arguments));
+class ChatScreen extends GetView<ChatController> {
+  final String otherUserId;
+  final String? otherUserName;
+  final String? otherUserPhoto;
+
+  final TextEditingController messageController = TextEditingController();
+
+  ChatScreen({required this.otherUserId, this.otherUserName, this.otherUserPhoto, Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final chat = controller.chatModel;
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(chat.receiverName),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: CircleAvatar(
-              backgroundImage: NetworkImage(chat.receiverPhotoUrl),
-            ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Obx(() {
-              return ListView.builder(
-                reverse: true,
-                itemCount: controller.messages.length,
-                itemBuilder: (context, index) {
-                  final msg = controller.messages[index];
-                  final isMe = msg.senderId == chat.senderId;
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight),
+        child: Obx(() {
+          final chat = controller.currentChat.value;
 
-                  return Align(
-                    alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      margin: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isMe ? Colors.blueAccent : Colors.grey[800],
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        msg.text,
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  );
-                },
-              );
-            }),
-          ),
-          Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
+          // Default title and image to fallback values
+          print('default values: username $otherUserName photo $otherUserPhoto');
+          String title = otherUserName ?? 'New Chat';
+          String? image = otherUserPhoto;
+
+          if (chat != null) {
+            final isGroup = chat.type.name == 'group';
+            if (isGroup) {
+              title = chat.groupName ?? 'Group';
+              image = chat.groupPhoto;
+            } else {
+              final otherId = chat.participants.firstWhere((id) => id != controller.currentUserId);
+              final user = controller.userCache[otherId];
+              title = user?.userName ?? 'Chat';
+              image = user?.profilePhoto;
+            }
+          }
+
+          return AppBar(
+            title: Row(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller.messageController,
-                    decoration: InputDecoration(
-                      hintText: "Message",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
-                      ),
-                      fillColor: Colors.grey[900],
-                      filled: true,
-                    ),
-                  ),
+                CircleAvatar(
+                  radius: 16.r,
+                  backgroundImage: image != null ? NetworkImage(image) : null,
+                  child: image == null ? Icon(Icons.person) : null,
                 ),
                 SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(Icons.send, color: Colors.blueAccent),
-                  onPressed: controller.sendMessage,
+                Text(title, style: TextStyle(fontSize: 18)),
+              ],
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.search),
+                onPressed: () {
+                  // TODO: implement message search
+                },
+              ),
+            ],
+          );
+        }),
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                // 🧾 Messages
+                Expanded(
+                  child: Obx(() {
+                    if (controller.isInitialLoading.value) {
+        
+                      return Center(child: CircularProgressIndicator());
+                    }
+
+                    final messages = controller.messages;
+
+                    if (messages.isEmpty) {
+                      return Center(child: Text("No messages yet"));
+                    }
+
+                    
+                    return ListView.builder(
+                      controller: controller.scrollController,
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                      reverse: false,
+                      itemCount: messages.length + 1, 
+                      itemBuilder: (_, index) {
+                        if (index == messages.length) {
+                          // Loader when paginating
+                          return controller.isLoadingMore
+                              ? Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Center(child: CircularProgressIndicator()),
+                                )
+                              : const SizedBox.shrink();
+                        }
+
+                        final msg = messages[index];
+                        final isMe = msg.senderId == controller.currentUserId;
+                        final sender = controller.userCache[msg.senderId];
+
+                        return Align(
+                          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                          child: MessageBubble(
+                            message: msg,
+                            isMe: isMe,
+                            isGroup: controller.currentChat.value?.type.name == 'group',
+                            sender: sender,
+                          ),
+                        );
+                      },
+                    );
+                  }),
+                ),
+
+                // 📥 Input bar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.attach_file),
+                        onPressed: () async {
+                          final result = await showModalBottomSheet(
+                            context: context,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                            ),
+                            builder: (_) => const AttachmentOptionsSheet(),
+                          );
+                          if (result != null) {
+                            controller.handleMediaAttachment(
+                              type: result,
+                              otherUserId: otherUserId,
+                              chatId: controller.currentChat.value?.id,
+                            );
+                          }
+                        },
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: messageController,
+                          decoration: InputDecoration(
+                            hintText: 'Type a message...',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.send),
+                        onPressed: () async {
+                          final text = messageController.text.trim();
+                          if (text.isNotEmpty) {
+                            messageController.clear();
+                            final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+                            final result = await controller.createOrGetDirectChat(currentUserId, otherUserId);
+                            final chatId = result.item1;
+                            final isNew = result.item2;
+
+                            if (isNew) {
+                              await controller.updateController(chatId);
+                            }
+
+                            await controller.sendMessage(chatId: chatId, senderId: currentUserId, text: text);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+
+            // 🔽 FAB scroll to bottom
+            Obx(() {
+              return controller.showScrollToBottomBtn.value
+                  ? Positioned(
+                      right: 20.w,
+                      bottom: 80.h,
+                      child: FloatingActionButton(
+                        backgroundColor: Colors.grey[300],
+                        shape: CircleBorder(),
+                        mini: true,
+                        onPressed: () {
+                          controller.scrollController.animateTo(
+                            controller.scrollController.position.maxScrollExtent,
+                            duration: Duration(milliseconds: 100),
+                            curve: Curves.easeOut,
+                          );
+                        },
+                        child: Icon(CupertinoIcons.down_arrow),
+                      ),
+                    )
+                  : SizedBox.shrink();
+            }),
+          ],
+        ),
       ),
     );
   }

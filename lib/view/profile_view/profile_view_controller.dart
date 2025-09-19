@@ -16,9 +16,11 @@ class ProfileViewController extends GetxController implements VideoListControlle
   RxList<VideoModel> userVideos = <VideoModel>[].obs;
   RxBool isLoading = false.obs;
   RxInt totalLikes = 0.obs;
-  RxInt totalComments = 0.obs;
-  RxInt totalShares = 0.obs;
+  RxInt followingCount = 0.obs;
+  RxInt followersCount = 0.obs;
   var userName = ''.obs;
+
+  final String? currentUid = FirebaseAuth.instance.currentUser?.uid;
 
   // final List<VideoPlayerController> activeVideoControllers = [];
 
@@ -26,9 +28,10 @@ class ProfileViewController extends GetxController implements VideoListControlle
   void onInit() async {
     super.onInit();
     _getUserProfile();
+    listenFollowersCount(currentUid!);
+    listenFollowingCount(currentUid!);
   }
 
-  
   // void register(VideoPlayerController controller) {
   //   activeVideoControllers.add(controller);
   // }
@@ -62,8 +65,8 @@ class ProfileViewController extends GetxController implements VideoListControlle
       // FirebaseAuth.instance.currentUser!.uid;
 
       final userData = await SharedPrefs.getUserFromPrefs();
-      
-      if (userData != null) {        
+
+      if (userData != null) {
         userName.value = userData.userName;
       }
 
@@ -89,6 +92,18 @@ class ProfileViewController extends GetxController implements VideoListControlle
     } finally {
       isLoading.value = false;
     }
+  }
+
+  void listenFollowersCount(String targetUid) {
+    FirebaseFirestore.instance.collection('users').doc(targetUid).collection('followers').snapshots().listen((snap) {
+      followersCount.value = snap.docs.length;
+    });
+  }
+
+  void listenFollowingCount(String targetUid) {
+    FirebaseFirestore.instance.collection('users').doc(targetUid).collection('following').snapshots().listen((snap) {
+      followingCount.value = snap.docs.length;
+    });
   }
 
   Future<void> logout() async {
@@ -154,7 +169,6 @@ class ProfileViewController extends GetxController implements VideoListControlle
             transaction.update(userRef, {'likes': FieldValue.increment(isLiked ? -1 : 1)});
           }
         });
-  
       } catch (e) {
         print('Error toggling like: $e');
         Utils.snackBar('Error', 'Failed to toggle like');
@@ -163,5 +177,4 @@ class ProfileViewController extends GetxController implements VideoListControlle
       }
     });
   }
-
 }

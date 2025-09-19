@@ -1,44 +1,49 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tiktok_clone/models/enumns.dart';
 
 class ChatModel {
-  final String chatId;
-  final String receiverId;
-  final String senderId;
-  final String message;
-  final DateTime timeStamp;
-  final String senderName;
-  final String senderPhoto;
+final String id;
+final ChatType type;
+final List<String> participants;
+final String? groupName;
+final String? groupPhoto;
+final String? lastMessage;
+final String? lastMessageBy;
+final DateTime? lastMessageAt;
 
-  const ChatModel({
-    required this.chatId,
-    required this.receiverId,
-    required this.senderName,
-    required this.senderId,
-    required this.message,
-    required this.senderPhoto,
-    required this.timeStamp,
-  });
+ChatModel({
+required this.id,
+required this.type,
+required this.participants,
+this.groupName,
+this.groupPhoto,
+this.lastMessage,
+this.lastMessageBy,
+this.lastMessageAt,
+});
 
-  Map<String, dynamic> toJson() {
-    return {
-      'receiverId': receiverId,
-      'senderName': senderName,
-      'senderId': senderId,
-      'message': message,
-      'senderPhoto': senderPhoto,
-      'timeStamp': Timestamp.fromDate(timeStamp),
-    };
-  }
+factory ChatModel.fromJson(Map<String, dynamic> json, String id) {
+return ChatModel(
+id: id,
+type: json['type'] == 'group' ? ChatType.group : ChatType.direct,
+participants: List<String>.from(json['participants'] ?? []),
+groupName: json['groupName'],
+groupPhoto: json['groupPhoto'],
+lastMessage: json['lastMessage'],
+lastMessageBy: json['lastMessageBy'],
+lastMessageAt: (json['lastMessageAt'] as Timestamp?)?.toDate(),
+);
+}
 
-  factory ChatModel.fromJson(Map<String, dynamic> json, String chatId) {
-    return ChatModel(
-      chatId: chatId,
-      receiverId: json['receiverId'],
-      senderName: json['senderName'],
-      senderId: json['senderId'],
-      message: json['message'],
-      senderPhoto: json['senderPhoto'],
-      timeStamp: (json['timeStamp'] as Timestamp).toDate(),
-    );
-  }
+Map<String, dynamic> toJson() {
+return {
+'type': type.name,
+'participants': participants,
+'groupName': groupName,
+'groupPhoto': groupPhoto,
+'lastMessage': lastMessage,
+'lastMessageBy': lastMessageBy,
+'lastMessageAt': lastMessageAt,
+};
+}
 }

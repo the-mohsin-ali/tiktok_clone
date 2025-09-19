@@ -1,10 +1,12 @@
+import 'package:tiktok_clone/models/follow_user_model.dart';
+
 class UserModel {
   final String uid;
   final String email;
   final String userName;
   final String? profilePhoto;
-  final List<String> followers;
-  final List<String> following;
+  final List<FollowUserModel> followers;
+  final List<FollowUserModel> following;
   final int likes;
 
   UserModel({
@@ -27,8 +29,8 @@ class UserModel {
       'email': email,
       'userName': userName,
       'profilePhoto': profilePhoto,
-      'followers': followers,
-      'following': following,
+      'followers': followers.map((f) => f.toMap()).toList(),
+      'following': following.map((f) => f.toMap()).toList(),
       'likes': likes,
     };
   }
@@ -39,8 +41,12 @@ class UserModel {
       email: map['email'],
       userName: map['userName'],
       profilePhoto: map['profilePhoto'],
-      followers: List<String>.from(map['followers'] ?? []),
-      following: List<String>.from(map['following'] ?? []),
+      followers: (map['followers'] as List<dynamic>? ?? [])
+          .map((f) => FollowUserModel.fromMap(f as Map<String, dynamic>))
+          .toList(),
+      following: (map['following'] as List<dynamic>? ?? [])
+          .map((f) => FollowUserModel.fromMap(f as Map<String, dynamic>))
+          .toList(),
       likes: map['likes'] ?? 0,
     );
   }

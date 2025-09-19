@@ -51,8 +51,8 @@ class SearchedProfile extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildStat(profileData.followingCount, 'Following'),
-                        _buildStat(profileData.followersCount, 'Followers'),
+                        _buildStat(controller.followingCount.value, 'Following'),
+                        _buildStat(controller.followersCount.value, 'Followers'),
                         _buildStat(controller.totalLikes.value, 'Likes'),
                       ],
                     ),
@@ -79,7 +79,7 @@ class SearchedProfile extends StatelessWidget {
                                   title: 'Followed',
                                   color: AppColor.buttonInactiveColor,
                                   onTap: () {
-                                    controller.toggleFollow();
+                                    controller.toggleFollow(profileData);
                                   },
                                   height: 40.h,
                                   width: 100.w,
@@ -94,7 +94,7 @@ class SearchedProfile extends StatelessWidget {
                                   title: 'Follow',
                                   color: AppColor.buttonActiveColor,
                                   onTap: () {
-                                    controller.toggleFollow();
+                                    controller.toggleFollow(profileData);
                                   },
                                   height: 40.h,
                                   width: 100.w,

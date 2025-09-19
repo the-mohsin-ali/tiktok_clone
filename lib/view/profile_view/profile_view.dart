@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:tiktok_clone/view/profile_view/followers_following_view.dart';
 import 'package:tiktok_clone/view/profile_view/profile_view_controller.dart';
 import 'package:tiktok_clone/view/profile_view/video_grid_item.dart';
 
@@ -53,8 +54,16 @@ class ProfileView extends GetView<ProfileViewController> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildStat(user.followingCount, 'Following'),
-                      _buildStat(user.followersCount, 'Followers'),
+                      GestureDetector(
+                        onTap: () {
+                          Get.to(FollowersFollowingView(uid: controller.currentUid!, type: "following"));
+                        },
+                        child: _buildStat(controller.followingCount.value, 'Following')),
+                      GestureDetector(
+                        onTap: () {
+                          Get.to(FollowersFollowingView(uid: controller.currentUid!, type: "followers"));                          
+                        },
+                        child: _buildStat(controller.followersCount.value, 'Followers')),
                       _buildStat(controller.totalLikes.value, 'Likes'),
                     ],
                   ),

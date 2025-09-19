@@ -1,9 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get/state_manager.dart';
 import 'package:tiktok_clone/constants/color/app_color.dart';
+import 'package:tiktok_clone/models/enumns.dart';
 import 'package:tiktok_clone/view/inbox_view/chat/chat_view.dart';
+import 'package:tiktok_clone/view/inbox_view/chat/chat_view_controller.dart';
 import 'package:tiktok_clone/view/inbox_view/inbox_controller.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -71,14 +74,17 @@ class InboxView extends GetView<InboxController> {
           const SizedBox(height: 16),
           Expanded(
             child: Obx(() {
-              final systemMessage = controller.system_message;
-              if (systemMessage.isEmpty) {
+              final items = controller.inboxItems;
+              if (items.isEmpty) {
                 return Center(
-                  child: Text("No messages yet", style: TextStyle(color: Colors.grey)),
+                  child: Text(
+                    "No messages yet",
+                    // style: TextStyle(color: Colors.grey)
+                  ),
                 );
               }
               return ListView.separated(
-                itemCount: systemMessage.length,
+                itemCount: items.length,
                 separatorBuilder: (context, index) {
                   return Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -86,23 +92,93 @@ class InboxView extends GetView<InboxController> {
                   );
                 },
                 itemBuilder: (context, index) {
-                  final msg = systemMessage[index];
+                  final item = items[index];
 
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    leading: CircleAvatar(
-                      radius: 24.r,
-                      backgroundImage: msg.userPhotoUrl.isNotEmpty
-                          ? NetworkImage(msg.userPhotoUrl)
-                          : const AssetImage('assets/images/default_profile.jpg') as ImageProvider,
-                    ),
-                    title: Text(msg.userName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(msg.message, style: const TextStyle(), maxLines: 1, overflow: TextOverflow.ellipsis),
-                    trailing: Text(timeago.format(msg.time), style: const TextStyle(fontSize: 12)),
-                    onTap: () {
-                      Get.to(ChatView());
-                    },
-                  );
+                  if (item.isSystemMessage) {
+                    final sm = item.systemMessage!;
+                    return ListTile(
+                      leading: CircleAvatar(
+                        // radius: 20.r,
+                        backgroundImage: sm.userPhotoUrl.isNotEmpty
+                            ? NetworkImage(sm.userPhotoUrl)
+                            : const AssetImage('assets/images/default_profile.jpg') as ImageProvider,
+                      ),
+                      title: Text(sm.userName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(
+                        sm.message,
+                        style: const TextStyle(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: SizedBox(
+                        width: 20.w,
+                        child: Text(
+                          timeago.format(sm.time, locale: 'en_short').replaceAll('~', ''),
+                          style: TextStyle(fontSize: 10.sp),
+                        ),
+                      ),
+                      onTap: () {
+                        print('system message tapped');
+                        controller.openOrCreateChatWith(sm.userId, sm.userName, sm.userPhotoUrl);
+                      },
+                    );
+                  } else if (item.isChat) {
+                    final chat = item.chat!;
+                    final currentUserId = controller.auth.currentUser?.uid;
+                    final otherUserId = chat.participants.firstWhere((id) => id != currentUserId);
+
+                    return FutureBuilder<DocumentSnapshot>(
+                      future: FirebaseFirestore.instance.collection('users').doc(otherUserId).get(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return ListTile(
+                            leading: CircleAvatar(child: Icon(Icons.person)),
+                            title: Text("Loading..."),
+                          );
+                        }
+
+                        final data = snapshot.data!.data() as Map<String, dynamic>;
+                        final name = data['userName'] ?? 'User';
+                        final photoUrl = data['profilePhoto'] ?? '';
+
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundImage: photoUrl.isNotEmpty
+                                ? NetworkImage(photoUrl)
+                                : const AssetImage('assets/images/default_profile.jpg') as ImageProvider,
+                            // child: photoUrl.isEmpty ? Icon(Icons.person) : null,
+                          ),
+                          title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text(
+                            chat.lastMessage ?? '',
+                            style: const TextStyle(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: chat.lastMessageAt != null
+                              ? SizedBox(
+                                  width: 20.w,
+                                  child: Text(
+                                    timeago.format(chat.lastMessageAt!, locale: 'en_short').replaceAll('~', ''),
+                                    style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.bold),
+                                  ),
+                                )
+                              : null,
+                          onTap: () async {
+                            print('user chat tapped');
+                            if (Get.isRegistered<ChatController>()) {
+                              final controller = Get.find<ChatController>();
+                              await controller.updateController(chat.id);
+                            } else {
+                              Get.put(ChatController(chatId: chat.id, currentUserId: currentUserId!));
+                            }
+
+                            Get.to(() => ChatScreen(otherUserId: otherUserId,));
+                          },
+                        );
+                      },
+                    );
+                  }
                 },
               );
             }),
@@ -110,5 +186,13 @@ class InboxView extends GetView<InboxController> {
         ],
       ),
     );
+  }
+
+  String getOtherParticipantName(List<String> participants, String? currentUserId) {
+    if (currentUserId == null) return 'Unknown';
+
+    final otherUserId = participants.firstWhere((id) => id != currentUserId, orElse: () => 'Unknown');
+
+    return otherUserId;
   }
 }
