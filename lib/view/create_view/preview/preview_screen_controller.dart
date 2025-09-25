@@ -12,8 +12,9 @@ class PreviewScreenController extends GetxController {
   var isUploading = false.obs;
 
   Future<String?> getVideoUrl(String filePath) async {
+    final cloudName = 'dihv9cnmf';
     final uri = Uri.parse(
-      "https://api.cloudinary.com/v1_1/dlvhzlppm/video/upload",
+      "https://api.cloudinary.com/v1_1/$cloudName/video/upload",
     );
     final request = MultipartRequest('POST', uri)
       ..fields['upload_preset'] = 'user_videos'

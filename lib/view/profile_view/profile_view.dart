@@ -51,19 +51,23 @@ class ProfileView extends GetView<ProfileViewController> {
                   ),
                   // SizedBox(width: 24.w,),
                   SizedBox(height: 24.h),
-                  Row(
+                  Row( 
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      GestureDetector(
-                        onTap: () {
-                          Get.to(FollowersFollowingView(uid: controller.currentUid!, type: "following"));
-                        },
-                        child: _buildStat(controller.followingCount.value, 'Following')),
-                      GestureDetector(
-                        onTap: () {
-                          Get.to(FollowersFollowingView(uid: controller.currentUid!, type: "followers"));                          
-                        },
-                        child: _buildStat(controller.followersCount.value, 'Followers')),
+                      Container(
+                        child: GestureDetector(
+                          onTap: () {
+                            Get.to(()=>FollowersFollowingView(targetUid: controller.currentUid!, initialTab: 0,));
+                          },
+                          child: _buildStat(controller.followingCount.value, 'Following')),
+                      ),
+                      Container(
+                        child: GestureDetector(
+                          onTap: () {
+                            Get.to(()=>FollowersFollowingView(targetUid: controller.currentUid!, initialTab: 1,));                          
+                          },
+                          child: _buildStat(controller.followersCount.value, 'Followers')),
+                      ),
                       _buildStat(controller.totalLikes.value, 'Likes'),
                     ],
                   ),

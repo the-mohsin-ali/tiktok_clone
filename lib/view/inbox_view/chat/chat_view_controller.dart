@@ -41,7 +41,7 @@ class ChatController extends GetxController {
   DocumentSnapshot? oldestMessageDoc;
   bool hasMore = true;
   bool isLoadingMore = false;
-  final int pageSize = 10;
+  final int pageSize = 15;
 
   @override
   void onInit() {
@@ -215,8 +215,8 @@ class ChatController extends GetxController {
             final data = doc.data() as Map<String, dynamic>;
             return MessageModel.fromJson(data, doc.id);
           })
-          .toList()
-          .reversed
+          // .toList()
+          // .reversed
           .toList();
 
       print("[loadOlderMessages] before insert ${messages.length}");
@@ -307,7 +307,7 @@ class ChatController extends GetxController {
   }
 
   Future<String> _uploadToCloudinary(File file) async {
-    final cloudName = 'dlvhzlppm';
+    final cloudName = 'dihv9cnmf';
     final uploadPreset = 'chat_files';
 
     final url = 'https://api.cloudinary.com/v1_1/$cloudName/auto/upload';

@@ -60,57 +60,57 @@ class SearchedProfile extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 60.0, vertical: 10),
                     child: controller.isCurrentUser
-                           ? SizedBox.shrink()
-                           : controller.isFollowing.value
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                RoundedButton(
-                                  titelColor: AppColor.secondaryColor,
-                                  title: 'Message',
-                                  color: AppColor.buttonInactiveColor,
-                                  onTap: () => Get.to(() => InboxView()),
-                                  height: 40.h,
-                                  width: 100.w,
-                                ),
-                                SizedBox(width: 5.w),
-                                RoundedButton(
-                                  titelColor: AppColor.primaryColor,
-                                  title: 'Followed',
-                                  color: AppColor.buttonInactiveColor,
-                                  onTap: () {
-                                    controller.toggleFollow(profileData);
-                                  },
-                                  height: 40.h,
-                                  width: 100.w,
-                                ),
-                              ],
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                RoundedButton(
-                                  titelColor: AppColor.secondaryColor,
-                                  title: 'Follow',
-                                  color: AppColor.buttonActiveColor,
-                                  onTap: () {
-                                    controller.toggleFollow(profileData);
-                                  },
-                                  height: 40.h,
-                                  width: 100.w,
-                                ),
-                                SizedBox(width: 5.w),
-                                RoundedButton(
-                                  titelColor: AppColor.primaryColor,
-                                  title: 'Message',
-                                  color: AppColor.buttonInactiveColor,
-                                  onTap: () {},
-                                  height: 40.h,
-                                  width: 100.w,
-                                ),
-                              ],
-                            ),
-                    ),
+                        ? SizedBox.shrink()
+                        : controller.isFollowing.value
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Followbutton(
+                                titelColor: AppColor.secondaryColor,
+                                title: 'Message',
+                                color: AppColor.buttonInactiveColor,
+                                onTap: () => Get.to(() => InboxView()),
+                                height: 40.h,
+                                width: 100.w,
+                              ),
+                              SizedBox(width: 5.w),
+                              Followbutton(
+                                titelColor: AppColor.primaryColor,
+                                title: 'Followed',
+                                color: AppColor.buttonInactiveColor,
+                                onTap: () {
+                                  controller.toggleFollow(profileData);
+                                },
+                                height: 40.h,
+                                width: 100.w,
+                              ),
+                            ],
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Followbutton(
+                                titelColor: AppColor.secondaryColor,
+                                title: 'Follow',
+                                color: AppColor.buttonActiveColor,
+                                onTap: () {
+                                  controller.toggleFollow(profileData);
+                                },
+                                height: 40.h,
+                                width: 100.w,
+                              ),
+                              SizedBox(width: 5.w),
+                              Followbutton(
+                                titelColor: AppColor.primaryColor,
+                                title: 'Message',
+                                color: AppColor.buttonInactiveColor,
+                                onTap: () {},
+                                height: 40.h,
+                                width: 100.w,
+                              ),
+                            ],
+                          ),
+                  ),
                 ],
               ),
             ),

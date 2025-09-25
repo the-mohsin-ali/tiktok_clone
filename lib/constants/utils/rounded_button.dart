@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class RoundedButton extends StatelessWidget {
+class Followbutton extends StatelessWidget {
   final String title;
   final Color color;
   final Color titelColor;
@@ -9,7 +9,7 @@ class RoundedButton extends StatelessWidget {
   final double height;
   final double width;
 
-  RoundedButton({
+  Followbutton({
     super.key,
     required this.titelColor,
     required this.title,
@@ -30,7 +30,12 @@ class RoundedButton extends StatelessWidget {
         child: Center(
           child: Text(
             title,
-            style: TextStyle(color: titelColor, fontSize: 18.w, fontFamily: 'TiktokSansExpanded', fontWeight: FontWeight.w500),
+            style: TextStyle(
+              color: titelColor,
+              fontSize: 18.w,
+              fontFamily: 'TiktokSansExpanded',
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ),

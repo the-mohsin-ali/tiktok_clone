@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone/interfaces/video_list_controller.dart';
+// import 'package:tiktok_clone/view/profile_view/profile_view_controller.dart';
 import 'package:tiktok_clone/view/profile_view/video_details/video_details_view.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
@@ -44,7 +45,9 @@ class _VideoGridItemState extends State<VideoGridItem> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Get.to(() => VideoDetailsView(initialIndex: widget.index, controller: widget.controller,));
+        Get.to(() => VideoDetailsView(initialIndex: widget.index, 
+        // controller: widget.controller as ProfileViewController,
+        ));
       },
       child: _thumbnailBytes != null
           ? Stack(

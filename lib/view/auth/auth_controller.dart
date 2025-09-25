@@ -80,7 +80,7 @@ class AuthController extends GetxController {
         throw Exception('Selected image file does not exist.');
       }
 
-      const cloudName = 'dlvhzlppm';
+      const cloudName = 'dihv9cnmf';
       const presetName = 'prof_picture';
 
       final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/upload');

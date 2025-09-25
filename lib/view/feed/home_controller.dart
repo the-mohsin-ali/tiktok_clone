@@ -4,38 +4,166 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:path/path.dart';
 import 'package:tiktok_clone/constants/utils/utils.dart';
+import 'package:tiktok_clone/interfaces/video_list_controller.dart';
 import 'package:tiktok_clone/models/user_model.dart';
 import 'package:tiktok_clone/models/video_model.dart';
 import 'package:tiktok_clone/view/inbox_view/inbox_controller.dart';
+import 'package:video_player/video_player.dart';
 
-class HomeController extends GetxController {
+class HomeController extends GetxController implements VideoListController {
   RxBool isLoading = false.obs;
 
   final PageController pageController = PageController();
 
   RxList<VideoModel> videos = <VideoModel>[].obs;
-  // final Rxn<UserModel> user = Rxn<UserModel>();
+
+  final videoControllers = <int, VideoPlayerController>{}.obs;
+  var currentIndex = 0.obs;
+
+  int maxActiveControllers = 3;
 
   final RxBool isFollowing = false.obs;
 
-  // final List<VideoPlayerController> activeVideoControllers = [];
+  bool _isFetching = false;
+  DocumentSnapshot? _lastDocument;
+  final int _pageSize = 5;
+
+  // final List<VideoPlayerController> videoControllers = [];
 
   @override
   void onInit() {
     super.onInit();
     print("onInit of home_controller called");
-
-    _listenToVideosStream();
+    fetchVideos();
+    // _listenToVideosStream();
   }
-  // @override
-  // void onClose() {
-  //   for (var controller in activeVideoControllers) {
-  //     controller.dispose();
-  //   }
-  //   activeVideoControllers.clear();
-  //   super.onClose();
-  // }
+
+  @override
+  void onClose() {
+    print("[HomeController] onClose() called");
+
+    for (var controller in videoControllers.values) {
+      try {
+        controller.pause();
+        controller.dispose();
+      } catch (_) {}
+    }
+    videoControllers.clear();
+    super.onClose();
+  }
+
+  Future<bool> initController(int index, String url) async {
+    if (videoControllers.containsKey(index)) return true;
+
+    try {
+      final controller = VideoPlayerController.networkUrl(Uri.parse(url));
+      await controller.initialize();
+      controller.setLooping(true);
+
+      videoControllers[index] = controller;
+
+      _logControllerCounts('init index $index');
+
+      return true;
+    } catch (e) {
+      print("[HomeController] failed to init controller for $index: $e");
+      return false;
+    }
+  }
+
+  void pauseController(int index) {
+    final c = videoControllers[index];
+    if (c != null && c.value.isPlaying) {
+      try {
+        c.pause();
+      } catch (_) {}
+    }
+  }
+
+  void playController(int index) {
+    final c = videoControllers[index];
+    if (c != null && !c.value.isPlaying) {
+      try {
+        c.play();
+      } catch (_) {}
+    }
+  }
+
+  void disposeController(int index) {
+    final c = videoControllers[index];
+    if (c != null) {
+      try {
+        c.pause();
+        c.dispose();
+      } catch (_) {}
+      videoControllers.remove(index);
+      _logControllerCounts('dispose index $index');
+    }
+  }
+
+  void _logControllerCounts(String reason) {
+    print(
+      '[HomeController] controllers: ${videoControllers.length} after $reason | keys=${videoControllers.keys.toList()}',
+    );
+  }
+
+  void onPageChanged(int index, List<VideoModel> allVideos) {
+    print("onPageChanged() called");
+
+    currentIndex.value = index;
+
+    // ✅ Init & play current video safely
+    initController(index, allVideos[index].videoUrl).then((ok) {
+      if (ok) {
+        playController(index);
+      } else {
+        print("[onPageChanged] Skipping current video at index $index due to init failure.");
+      }
+    });
+
+    // ✅ Preload next video safely
+    if (index + 1 < allVideos.length) {
+      initController(index + 1, allVideos[index + 1].videoUrl).then((ok) {
+        if (!ok) {
+          print("[onPageChanged] Skipped preload for ${index + 1}");
+        }
+      });
+    }
+
+    // ✅ Preload previous video safely
+    if (index - 1 >= 0) {
+      initController(index - 1, allVideos[index - 1].videoUrl).then((ok) {
+        if (!ok) {
+          print("[onPageChanged] Skipped preload for ${index - 1}");
+        }
+      });
+    }
+
+    // ✅ Pause any controller that's not current
+    for (final key in videoControllers.keys.toList()) {
+      if (key != index) {
+        pauseController(key);
+      }
+    }
+
+    // ✅ Dispose controllers farther than allowed window
+    final allowed = <int>{index};
+    if (maxActiveControllers >= 2 && index + 1 < allVideos.length) {
+      allowed.add(index + 1);
+    }
+    if (maxActiveControllers >= 3 && index - 1 >= 0) {
+      allowed.add(index - 1);
+    }
+
+    videoControllers.keys.where((i) => !allowed.contains(i)).toList().forEach(disposeController);
+
+    // ✅ Pagination trigger
+    if (index >= allVideos.length - 1) {
+      fetchVideos(loadMore: true);
+    }
+  }
 
   Future<void> checkIfFollowingForVideo(VideoModel video) async {
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
@@ -51,43 +179,50 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> _listenToVideosStream() async {
-    try {
-      FirebaseFirestore.instance.collection('videos').orderBy('uploadedAt', descending: true).snapshots().listen((
-        snapshot,
-      ) {
-        videos.value = snapshot.docs.map((doc) => VideoModel.fromDocument(doc)).toList();
-      });
-      for (final video in videos) {
-        checkIfFollowingForVideo(video);
-      }
-    } catch (e) {
-      Utils.snackBar("Error", "Error listening to videos stream");
-      print('Error listening to video stream');
-    }
-  }
+  Future<void> fetchVideos({bool loadMore = false}) async {
+    if (_isFetching) return;
 
-  Future<void> fetchVideos() async {
-    // isFetching = true;
-    print("controllers fetch videos called");
+    _isFetching = true;
+
+    print("[HomeController] fetchVideos() called");
     isLoading.value = true;
     try {
-      final snapshot = await FirebaseFirestore.instance
+      Query query = FirebaseFirestore.instance
           .collection('videos')
           .orderBy('uploadedAt', descending: true)
-          .get();
-      videos.clear();
-      print('value in videos after videos.clear: ${videos.toString()}');
-      videos.value = List.from(snapshot.docs.map((doc) => VideoModel.fromJson(doc.data(), doc.id)).toList());
-      print("video url get in fetchVideos:${videos.value.first.videoUrl}");
-      // videos.shuffle();
-      update();
+          .limit(_pageSize);
+
+      if (loadMore && _lastDocument != null) {
+        query = query.startAfterDocument(_lastDocument!);
+      }
+
+      final snapshot = await query.get();
+
+      if (snapshot.docs.isNotEmpty) {
+        _lastDocument = snapshot.docs.last;
+
+        final newVideos = snapshot.docs
+            .map((doc) => VideoModel.fromJson(doc.data() as Map<String, dynamic>, doc.id))
+            .toList();
+
+        if (loadMore) {
+          videos.addAll(newVideos);
+        } else {
+          videos.assignAll(newVideos);
+        }
+
+        print('[fetchVideos] length of videos: ${videos.length}');
+
+        for (final video in newVideos) {
+          checkIfFollowingForVideo(video);
+        }
+      }
     } catch (e) {
       Utils.snackBar('Error', 'error fetching videos from database');
-      print('error fetching videos from database: $e');
+      print('[fetchVideos()] error fetching videos from database: $e');
     } finally {
       isLoading.value = false;
-      // isFetching = false;
+      _isFetching = false;
     }
   }
 
@@ -198,6 +333,10 @@ class HomeController extends GetxController {
       Get.find<InboxController>().addFollowPrompt(isReverse: true, user: currentUser);
     }
   }
+
+  @override
+  // TODO: implement userVideos
+  RxList<VideoModel> userVideos = <VideoModel>[].obs;
 }
 
 

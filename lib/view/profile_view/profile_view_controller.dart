@@ -6,11 +6,12 @@ import 'package:get/get.dart';
 import 'package:tiktok_clone/constants/routes/routes_names.dart';
 import 'package:tiktok_clone/constants/utils/utils.dart';
 import 'package:tiktok_clone/interfaces/video_list_controller.dart';
+import 'package:tiktok_clone/mixin/video_page_mixin.dart';
 import 'package:tiktok_clone/models/user_model.dart';
 import 'package:tiktok_clone/models/video_model.dart';
 import 'package:tiktok_clone/services/shared_prefs.dart';
 
-class ProfileViewController extends GetxController implements VideoListController {
+class ProfileViewController extends GetxController with VideoPageMixin implements VideoListController {
   FirebaseAuth auth = FirebaseAuth.instance;
   Rx<UserModel> user = UserModel.empty().obs;
   RxList<VideoModel> userVideos = <VideoModel>[].obs;
@@ -58,6 +59,9 @@ class ProfileViewController extends GetxController implements VideoListControlle
   // }
 
   Future<void> _getUserProfile() async {
+
+    print("_getUserProfile() is run");
+    
     isLoading.value = true;
     try {
       final uid = await SharedPrefs.getUserId();
@@ -77,7 +81,11 @@ class ProfileViewController extends GetxController implements VideoListControlle
         }
       });
 
-      final videoSnapshot = await FirebaseFirestore.instance.collection('videos').where('uid', isEqualTo: uid).get();
+      final videoSnapshot = await FirebaseFirestore.instance
+          .collection('videos')
+          .where('uid', isEqualTo: uid)
+          .orderBy('uploadedAt', descending: true)
+          .get();
 
       print('Found videos: ${videoSnapshot.docs.length}');
 
@@ -176,5 +184,10 @@ class ProfileViewController extends GetxController implements VideoListControlle
         _debounceTimers.remove(videoId);
       }
     });
+  }
+  
+  @override
+  void followUser(String uid, String videoId) {
+    // TODO: implement followUser
   }
 }

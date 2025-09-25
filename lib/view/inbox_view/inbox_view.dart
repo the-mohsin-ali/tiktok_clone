@@ -2,9 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:get/state_manager.dart';
 import 'package:tiktok_clone/constants/color/app_color.dart';
-import 'package:tiktok_clone/models/enumns.dart';
 import 'package:tiktok_clone/view/inbox_view/chat/chat_view.dart';
 import 'package:tiktok_clone/view/inbox_view/chat/chat_view_controller.dart';
 import 'package:tiktok_clone/view/inbox_view/inbox_controller.dart';
@@ -45,32 +43,89 @@ class InboxView extends GetView<InboxController> {
             child: Text("RECENT", style: TextStyle(color: Colors.grey, letterSpacing: 1)),
           ),
           SizedBox(height: 12.h),
-          SizedBox(
-            height: 60.h,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              itemCount: 6, // demo items
-              separatorBuilder: (_, __) => SizedBox(width: 16.w),
-              itemBuilder: (context, index) {
-                return Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 25.r,
-                      backgroundImage: NetworkImage(
-                        'https://randomuser.me/api/portraits/men/75.jpg', // Replace with real photo
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      ['Barry', 'Perez', 'Alvin', 'Dan', 'Amy', 'Nina'][index],
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
+          Obx(() {
+            final chats = controller.inboxItems.where((item) => item.isChat).map((item) => item.chat!).toList();
+
+            if (chats.isEmpty) {
+              return SizedBox(
+                height: 60.h,
+                child: Center(child: Text("No recent chats")),
+              );
+            }
+
+            chats.sort((a, b) => b.lastMessageAt!.compareTo(a.lastMessageAt!));
+
+            final recentChats = chats.take(10).toList();
+
+            return SizedBox(
+              height: 60.h,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                itemCount: recentChats.length,
+                separatorBuilder: (_, __) => SizedBox(width: 16.w),
+                itemBuilder: (context, index) {
+                  final chat = recentChats[index];
+                  final currentUserId = controller.auth.currentUser?.uid;
+                  final otherUserId = chat.participants.firstWhere((id) => id != currentUserId);
+
+                  return FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance.collection('users').doc(otherUserId).get(),
+                    builder: (context, asyncSnapshot) {
+                      if (!asyncSnapshot.hasData) {
+                        return Center(
+                          child: Text(
+                            "No recent chats",
+                            style: TextStyle(fontFamily: 'TikTokSansExpanded', fontWeight: FontWeight.w400),
+                          ),
+                        );
+                        // Column(
+                        //   children: [
+                        //     CircleAvatar(radius: 25.r, child: Icon(Icons.person)),
+                        //     SizedBox(height: 4),
+                        //     Text("...", style: TextStyle(fontSize: 12)),
+                        //   ],
+                        // );
+                      }
+
+                      final data = asyncSnapshot.data!.data() as Map<String, dynamic>;
+                      final name = data['userName'] ?? 'User';
+                      final photoUrl = data['profilePhoto'] ?? '';
+
+                      return GestureDetector(
+                        onTap: () async {
+                          print("recent chat tapped");
+                          if (Get.isRegistered<ChatController>()) {
+                            final chatController = Get.find<ChatController>();
+                            await chatController.updateController(chat.id);
+                          }else{
+                            Get.put(ChatController(chatId: chat.id, currentUserId: currentUserId!));
+                          }
+                          Get.to(() => ChatScreen(otherUserId: otherUserId));
+                        },
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              radius: 25.r,
+                              backgroundImage: photoUrl.isNotEmpty
+                              ? NetworkImage(photoUrl)
+                              : const AssetImage('assets/images/default_profile.jpg') as ImageProvider
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              name,
+                              style: const TextStyle(fontSize: 12),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            );
+          }),
           const SizedBox(height: 16),
           Expanded(
             child: Obx(() {
@@ -173,7 +228,7 @@ class InboxView extends GetView<InboxController> {
                               Get.put(ChatController(chatId: chat.id, currentUserId: currentUserId!));
                             }
 
-                            Get.to(() => ChatScreen(otherUserId: otherUserId,));
+                            Get.to(() => ChatScreen(otherUserId: otherUserId));
                           },
                         );
                       },

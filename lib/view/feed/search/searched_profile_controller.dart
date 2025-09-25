@@ -103,6 +103,7 @@ void listenFollowingCount(String targetUid) {
     }
   }
 
+
   void toggleFollow(UserModel targetUser) async {
     final currentUser = FirebaseAuth.instance.currentUser!;
     final currentUid = currentUser.uid;
@@ -224,4 +225,13 @@ void listenFollowingCount(String targetUid) {
       });
     }
   }
+  
+  @override
+  void followUser(String uid, String videoId) {
+    // TODO: implement followUser
+  }
+  
+  @override
+  // TODO: implement isLoading
+  RxBool get isLoading => throw UnimplementedError();
 }
