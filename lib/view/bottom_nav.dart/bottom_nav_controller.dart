@@ -22,26 +22,18 @@ class BottomNavController extends GetxController {
 
   // final RxBool isPop = false.obs;
 
-  final List<Widget> pages = [
-    HomeView(),
-    FriendsView(),
-    CreateView(),
-    InboxView(),
-    ProfileView(),
-  ];
+  final List<Widget> pages = [HomeView(), FriendsView(), CreateView(), InboxView(), ProfileView()];
 
   void changeTabIndex(int index) {
-    // final previousIndex = selectedTabIndex.value;
-    // if (previousIndex == 0) {
-    //   Get.find<HomeController>().pauseAllVideos();
-    // }else if(previousIndex == 4){
-    //   Get.find<ProfileViewController>().pauseAllVideos();
-    // }
+    final previousIndex = selectedTabIndex.value;
+    if (previousIndex == 0 && Get.isRegistered<HomeController>()) {
+      Get.find<HomeController>().pauseAllVideos();
+    }
 
     selectedTabIndex.value = index;
 
-  //   if (index == 0) {
-  //   Get.find<HomeController>().resumeAllVideos();
-  // } 
+    if (index == 0 && Get.isRegistered<HomeController>()) {
+      Get.find<HomeController>().resumeCurrentVideo();
+    }
   }
 }

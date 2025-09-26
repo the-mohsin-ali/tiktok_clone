@@ -61,48 +61,86 @@ import 'package:video_player/video_player.dart';
 //   }
 // }
 
-class VideoPlayerItem extends StatelessWidget {
+class VideoPlayerItem extends StatefulWidget {
   final VideoPlayerController? videoController;
   final VideoModel video;
   // final listController listController = Get.find();
   final VideoListController listController;
 
-  VideoPlayerItem({super.key, required this.videoController, required this.video, required this.listController});
+  const VideoPlayerItem({super.key, required this.videoController, required this.video, required this.listController});
 
-  void _togglePlayPause() {
-    if (videoController!.value.isPlaying) {
-      videoController!.pause();
+  @override
+  State<VideoPlayerItem> createState() => _VideoPlayerItemState();
+}
+
+class _VideoPlayerItemState extends State<VideoPlayerItem> {
+  @override
+  void initState() {
+    super.initState();
+    widget.videoController?.addListener(_onControllerUpdate);
+  }
+
+  void _onControllerUpdate() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.videoController?.removeListener(_onControllerUpdate);
+    super.dispose();
+  }
+
+  Future<void> _togglePlayPause() async {
+    print("[_togglePlayPause()] video tapped");
+
+    if (widget.videoController == null) return;
+
+    if (widget.videoController!.value.isPlaying) {
+      print("[_togglePlayPause()] Before tap -> isPlaying: ${widget.videoController!.value.isPlaying}");
+      await widget.videoController!.pause();
+      print("[_togglePlayPause()] After pause -> isPlaying: ${widget.videoController!.value.isPlaying}");
     } else {
-      videoController!.play();
+      await widget.videoController!.play();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final currentUid = SharedPrefs.cachedUid;
-    final isLiked = video.likedBy.contains(currentUid);
+    final isLiked = widget.video.likedBy.contains(currentUid);
 
     return Stack(
       children: [
         Positioned.fill(
-          child: videoController != null && videoController!.value.isInitialized
-              ? GestureDetector(onTap: _togglePlayPause, child: VideoPlayer(videoController!))
+          child: widget.videoController != null && widget.videoController!.value.isInitialized
+              ? GestureDetector(onTap: _togglePlayPause, child: VideoPlayer(widget.videoController!))
               : const Center(child: CircularProgressIndicator()),
         ),
 
-        // // 🔎 Search button (top-right)
-        // Positioned(
-        //   top: 40.h,
-        //   right: 20.h,
-        //   child: GestureDetector(
-        //     onTap: () => Get.to(() => SearchScreen()),
-        //     child: Icon(Icons.search_sharp, color: AppColor.buttonInactiveColor, size: 38),
-        //   ),
-        // ),
+        if (widget.videoController != null &&
+            widget.videoController!.value.isInitialized &&
+            !widget.videoController!.value.isPlaying)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.2),
+                child: Center(
+                  child: Image.asset(
+                    'assets/icons/play_icon.png',
+                    width: 45.w,
+                    height: 45.h,
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
+                ),
+              ),
+            ),
+          ),
 
         // 👉 Right-side buttons (profile, like, comment, share)
         Positioned(
-          bottom: 50.h,
+          bottom: 70.h,
           right: 10.h,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -119,16 +157,16 @@ class VideoPlayerItem extends StatelessWidget {
                       top: 0,
                       child: CircleAvatar(
                         radius: 24.r,
-                        backgroundImage: video.profilePhoto != null && video.profilePhoto!.isNotEmpty
-                            ? NetworkImage(video.profilePhoto!)
+                        backgroundImage: widget.video.profilePhoto != null && widget.video.profilePhoto!.isNotEmpty
+                            ? NetworkImage(widget.video.profilePhoto!)
                             : const AssetImage('assets/images/default_profile.jpg') as ImageProvider,
                       ),
                     ),
-                    if (!video.isFollowingThisPoster)
+                    if (!widget.video.isFollowingThisPoster)
                       Positioned(
                         bottom: 6,
                         child: GestureDetector(
-                          onTap: () => listController.followUser(video.uid, video.videoId),
+                          onTap: () => widget.listController.followUser(widget.video.uid, widget.video.videoId),
                           child: Image.asset(
                             'assets/icons/plus_button.png',
                             fit: BoxFit.cover,
@@ -145,15 +183,15 @@ class VideoPlayerItem extends StatelessWidget {
 
               // ❤️ Like button
               InkWell(
-                onTap: () => listController.addLike(video),
+                onTap: () => widget.listController.addLike(widget.video),
                 child: Image.asset(
                   isLiked ? 'assets/icons/like_icon_filled.png' : 'assets/icons/like_icon.png',
                   key: ValueKey(isLiked), // ensures animation refresh
-                  width: 42.w,
-                  height: 42.h,
+                  width: 32.w,
+                  height: 32.h,
                 ),
               ),
-              Text('${video.likeCount}', style: const TextStyle(color: Colors.white)),
+              Text('${widget.video.likeCount}', style: const TextStyle(color: Colors.white)),
 
               SizedBox(height: 10.h),
 
@@ -172,42 +210,42 @@ class VideoPlayerItem extends StatelessWidget {
                     builder: (context) {
                       return Padding(
                         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-                        child: CommentsBottomsheet(video: video),
+                        child: CommentsBottomsheet(video: widget.video),
                       );
                     },
                   );
                 },
                 child: SvgPicture.asset(
                   'assets/icons/comment_icon.svg',
-                  width: 38.w,
-                  height: 38.h,
+                  width: 32.w,
+                  height: 32.h,
                   colorFilter: ColorFilter.mode(AppColor.secondaryColor, BlendMode.srcIn),
                 ),
               ),
-              Text('${video.commentCount}', style: const TextStyle(color: Colors.white)),
+              Text('${widget.video.commentCount}', style: const TextStyle(color: Colors.white)),
 
               SizedBox(height: 10.h),
 
               // 🔗 Share button
               InkWell(
                 onTap: () {
-                  SharePlus.instance.share(ShareParams(text: 'check this out! ${video.videoUrl}'));
+                  SharePlus.instance.share(ShareParams(text: 'check this out! ${widget.video.videoUrl}'));
                 },
                 child: SvgPicture.asset(
                   'assets/icons/share_icon.svg',
-                  width: 32.w,
-                  height: 32.h,
+                  width: 26.w,
+                  height: 26.h,
                   colorFilter: ColorFilter.mode(AppColor.secondaryColor, BlendMode.srcIn),
                 ),
               ),
-              Text("${video.shareCount}", style: const TextStyle(color: Colors.white)),
+              Text("${widget.video.shareCount}", style: const TextStyle(color: Colors.white)),
             ],
           ),
         ),
 
         // ⏳ Loading indicator (top-center)
         Obx(
-          () => listController.isLoading.value
+          () => widget.listController.isLoading.value
               ? Align(
                   alignment: Alignment.topCenter,
                   child: Padding(

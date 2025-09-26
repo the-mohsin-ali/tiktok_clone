@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:path/path.dart';
 import 'package:tiktok_clone/constants/utils/utils.dart';
 import 'package:tiktok_clone/interfaces/video_list_controller.dart';
 import 'package:tiktok_clone/models/user_model.dart';
@@ -165,6 +164,28 @@ class HomeController extends GetxController implements VideoListController {
     }
   }
 
+  //helper methods for play/pausing upon tab change or screen navigation
+
+  void pauseAllVideos() {
+    for (var vc in videoControllers.values) {
+      if (vc.value.isPlaying) {
+        try {
+          vc.pause();
+        } catch (_) {}
+      }
+    }
+  }
+
+  void resumeCurrentVideo() {
+    final index = currentIndex.value;
+    final c = videoControllers[index];
+    if (c != null && !c.value.isPlaying) {
+      try {
+        c.play();
+      } catch (_) {}
+    }
+  }
+
   Future<void> checkIfFollowingForVideo(VideoModel video) async {
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
     final posterUid = video.uid;
@@ -216,6 +237,13 @@ class HomeController extends GetxController implements VideoListController {
         for (final video in newVideos) {
           checkIfFollowingForVideo(video);
         }
+        if (!loadMore && videos.isNotEmpty) {
+          final firstUrl = videos.first.videoUrl;
+          await initController(0, firstUrl);
+          playController(0);
+          currentIndex.value = 0; // track bhi update karo
+          videos.refresh();
+        }
       }
     } catch (e) {
       Utils.snackBar('Error', 'error fetching videos from database');
@@ -228,6 +256,7 @@ class HomeController extends GetxController implements VideoListController {
 
   final Map<String, Timer> _debounceTimers = {};
 
+  @override
   Future<void> addLike(VideoModel video) async {
     final videoId = video.videoId;
 
@@ -284,6 +313,7 @@ class HomeController extends GetxController implements VideoListController {
     });
   }
 
+  @override
   Future<void> followUser(String posterUid, String videoId) async {
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
     final userRef = FirebaseFirestore.instance.collection('users').doc(posterUid);

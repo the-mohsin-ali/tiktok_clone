@@ -45,7 +45,7 @@ class _VideoGridItemState extends State<VideoGridItem> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Get.to(() => VideoDetailsView(initialIndex: widget.index, 
+        Get.to(() => VideoDetailsView(initialIndex: widget.index, listController: widget.controller,
         // controller: widget.controller as ProfileViewController,
         ));
       },

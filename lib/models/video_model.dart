@@ -7,13 +7,14 @@ class VideoModel {
   final String? profilePhoto;
   final bool isFollowingThisPoster;
   final String userName;
-  final String videoTitle;
+  final String? videoTitle;
   final String? videoDescription;
   final int likeCount;
   final List<String> likedBy;
   final int commentCount;
   final int shareCount;
   final DateTime uploadedAt;
+  final List<String>? keywords;
 
   VideoModel({
     required this.videoId,
@@ -29,6 +30,7 @@ class VideoModel {
     this.likedBy = const [],
     this.commentCount = 0,
     required this.uploadedAt,
+    this.keywords = const []
   });
 
   Map<String, dynamic> toJson() {
@@ -44,6 +46,7 @@ class VideoModel {
       "commentCount": commentCount,
       "shareCount": shareCount,
       "uploadedAt": uploadedAt,
+      "keywords": keywords
     };
   }
 
@@ -58,10 +61,37 @@ class VideoModel {
       commentCount: json["commentCount"] ?? 0,
       shareCount: json["shareCount"] ?? 0,
       uploadedAt: (json["uploadedAt"] as Timestamp).toDate(),
-      videoTitle: '',
-      userName: '',
+      videoTitle: json["videoTitle"] ?? '',
+      userName: json["userName"] ?? '',
+      videoDescription: json['videoDescription'],
+      keywords: (json["keywords"] as List?)?.map((e)=> e.toString()).toList() ?? [],
     );
   }
+
+
+  factory VideoModel.fromUserInput({
+  required String videoId,
+  required String videoUrl,
+  required String uid,
+  required String userName,
+  String? profilePhoto,
+  String? title,
+  String? description,
+  List<String>? keywords,
+}) {
+  return VideoModel(
+    videoId: videoId,
+    videoUrl: videoUrl,
+    uid: uid,
+    profilePhoto: profilePhoto,
+    userName: userName,
+    videoTitle: title ?? "",
+    videoDescription: description,
+    uploadedAt: DateTime.now(),
+    keywords: keywords ?? [],
+  );
+}
+
 
   factory VideoModel.fromDocument(DocumentSnapshot snapshot) {
     final data = snapshot.data() as Map<String, dynamic>;
@@ -77,6 +107,8 @@ class VideoModel {
       shareCount: data["shareCount"] ?? 0,
       videoTitle: data["videoTitle"] ?? '',
       userName: data["userName"] ?? '',
+      videoDescription: data["videoDescription"],
+      keywords: (data["keywords"] as List?)?.map((e)=> e.toString()).toList() ?? [],
     );
   }
 

@@ -43,6 +43,9 @@ class ChatScreen extends GetView<ChatController> {
           }
 
           return AppBar(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
             title: Row(
               children: [
                 CircleAvatar(
@@ -74,7 +77,6 @@ class ChatScreen extends GetView<ChatController> {
                 Expanded(
                   child: Obx(() {
                     if (controller.isInitialLoading.value) {
-        
                       return Center(child: CircularProgressIndicator());
                     }
 
@@ -84,12 +86,11 @@ class ChatScreen extends GetView<ChatController> {
                       return Center(child: Text("No messages yet"));
                     }
 
-                    
                     return ListView.builder(
                       controller: controller.scrollController,
                       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                       reverse: false,
-                      itemCount: messages.length + 1, 
+                      itemCount: messages.length + 1,
                       itemBuilder: (_, index) {
                         if (index == messages.length) {
                           // Loader when paginating
@@ -185,7 +186,7 @@ class ChatScreen extends GetView<ChatController> {
                       right: 20.w,
                       bottom: 80.h,
                       child: FloatingActionButton(
-                        backgroundColor: Colors.grey[300],
+                        backgroundColor: Theme.of(context).cardColor,
                         shape: CircleBorder(),
                         mini: true,
                         onPressed: () {
@@ -195,7 +196,7 @@ class ChatScreen extends GetView<ChatController> {
                             curve: Curves.easeOut,
                           );
                         },
-                        child: Icon(CupertinoIcons.down_arrow),
+                        child: Icon(CupertinoIcons.down_arrow, color: Theme.of(context).iconTheme.color),
                       ),
                     )
                   : SizedBox.shrink();

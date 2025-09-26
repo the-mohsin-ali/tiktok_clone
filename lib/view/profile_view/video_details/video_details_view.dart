@@ -6,45 +6,118 @@
 // import 'package:tiktok_clone/services/shared_prefs.dart';
 // import 'package:tiktok_clone/view/feed/comments/comments_bottomsheet.dart';
 import 'package:flutter/material.dart';
+import 'package:tiktok_clone/core/video_playback_manager.dart';
+import 'package:tiktok_clone/interfaces/video_list_controller.dart';
 import 'package:tiktok_clone/view/feed/video_player_item.dart';
 import 'package:tiktok_clone/view/profile_view/profile_view_controller.dart';
 import 'package:get/get.dart';
 
-class VideoDetailsView extends StatelessWidget {
-  final int initialIndex;
-  final ProfileViewController controller = Get.find();
+// class VideoDetailsView extends StatelessWidget {
+//   final int initialIndex;
+//   final ProfileViewController controller = Get.find();
 
-  VideoDetailsView({super.key, required this.initialIndex});
+//   VideoDetailsView({super.key, required this.initialIndex});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final pageController = PageController(initialPage: initialIndex);
+
+//     return Scaffold(
+//       body: Stack(
+//         children: [
+//           Obx(
+//             () => PageView.builder(
+//               controller: pageController,
+//               scrollDirection: Axis.vertical,
+//               onPageChanged: (index) => controller.onPageChanged(index, controller.userVideos),
+//               itemCount: controller.userVideos.length,
+//               itemBuilder: (context, index) {
+//                 final video = controller.userVideos[index];
+//                 final vc = controller.videoControllers[index];
+
+//                 return VideoPlayerItem(
+//                   videoController: vc,
+//                   video: video,
+//                   listController: controller, // <-- Profile controller inject
+//                 );
+//               },
+//             ),
+//           ),
+//           Positioned(
+//             top: 30,
+//             left: 10,
+//             child: IconButton(icon: const Icon(Icons.arrow_back_outlined), onPressed: () => Get.back()),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+
+
+class VideoDetailsView extends StatefulWidget {
+  final int initialIndex;
+  final VideoListController listController;
+
+  const VideoDetailsView({
+    super.key,
+    required this.initialIndex,
+    required this.listController,
+  });
+
+  @override
+  State<VideoDetailsView> createState() => _VideoDetailsViewState();
+}
+
+class _VideoDetailsViewState extends State<VideoDetailsView> {
+  late VideoPlaybackManager playbackManager;
+
+  @override
+  void initState() {
+    super.initState();
+    playbackManager = VideoPlaybackManager(
+      videos: widget.listController.userVideos,
+      initialIndex: widget.initialIndex,
+    );
+  }
+
+  @override
+  void dispose() {
+    playbackManager.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final pageController = PageController(initialPage: initialIndex);
-
     return Scaffold(
       body: Stack(
         children: [
-          Obx(
-            () => PageView.builder(
-              controller: pageController,
+          Obx(() {
+            final videos = widget.listController.userVideos;
+            return PageView.builder(
+              controller: playbackManager.pageController,
               scrollDirection: Axis.vertical,
-              onPageChanged: (index) => controller.onPageChanged(index, controller.userVideos),
-              itemCount: controller.userVideos.length,
+              itemCount: videos.length,
               itemBuilder: (context, index) {
-                final video = controller.userVideos[index];
-                final vc = controller.videoControllers[index];
+                final video = videos[index];
+                final vc = playbackManager.videoControllers[index];
 
                 return VideoPlayerItem(
                   videoController: vc,
                   video: video,
-                  listController: controller, // <-- Profile controller inject
+                  listController: widget.listController,
                 );
               },
-            ),
-          ),
+            );
+          }),
           Positioned(
             top: 30,
             left: 10,
-            child: IconButton(icon: const Icon(Icons.arrow_back_outlined), onPressed: () => Get.back()),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back_outlined),
+              onPressed: () => Get.back(),
+            ),
           ),
         ],
       ),
