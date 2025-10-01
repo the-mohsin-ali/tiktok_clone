@@ -229,29 +229,29 @@ class _CommentWithReplies extends StatelessWidget {
           ),
 
           // Replies with fixed indent
-          if (comment.repliesStream != null)
-            StreamBuilder<List<CommentsModel>>(
-              stream: controller.getReplies(videoId, comment.commentId),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox.shrink();
+          // if (comment.repliesStream != null)
+          StreamBuilder<List<CommentsModel>>(
+            stream: controller.getReplies(videoId, comment.commentId),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox.shrink();
 
-                final replies = snapshot.data!;
+              final replies = snapshot.data!;
 
-                return Column(
-                  children: replies.map((reply) {
-                    return Padding(
-                      padding: EdgeInsets.only(left: 46.w, top: 4),
-                      child: CommentItem(
-                        model: reply,
-                        videoId: videoId,
-                        onReply: () => controller.startReplyTo(reply),
-                        onLike: () => controller.likeComment(videoId, reply.commentId),
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
+              return Column(
+                children: replies.map((reply) {
+                  return Padding(
+                    padding: EdgeInsets.only(left: 46.w, top: 4),
+                    child: CommentItem(
+                      model: reply,
+                      videoId: videoId,
+                      onReply: () => controller.startReplyTo(reply),
+                      onLike: () => controller.likeComment(videoId, reply.commentId),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
         ],
       ),
     );
