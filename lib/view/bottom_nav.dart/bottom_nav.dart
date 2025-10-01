@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone/constants/color/app_color.dart';
@@ -74,12 +75,16 @@ class BottomNav extends GetView<BottomNavController> {
                 BottomNavigationBarItem(
                   icon: SvgPicture.asset(
                     'assets/icons/home.svg',
+                    height: 18.h,
+                    width: 18.w,
                     colorFilter: bottomBarTheme.brightness == Brightness.dark
                         ? ColorFilter.mode(AppColor.buttonInactiveColor, BlendMode.srcIn)
                         : null,
                   ),
                   activeIcon: SvgPicture.asset(
                     'assets/icons/home_filled.svg',
+                    height: 18.h,
+                    width: 18.w,
                     colorFilter: bottomBarTheme.brightness == Brightness.dark
                         ? ColorFilter.mode(AppColor.secondaryColor, BlendMode.srcIn)
                         : null,
@@ -89,12 +94,16 @@ class BottomNav extends GetView<BottomNavController> {
                 BottomNavigationBarItem(
                   icon: SvgPicture.asset(
                     'assets/icons/friends.svg',
+                    height: 18.h,
+                    width: 18.w,
                     colorFilter: bottomBarTheme.brightness == Brightness.dark
                         ? ColorFilter.mode(AppColor.buttonInactiveColor, BlendMode.srcIn)
                         : null,
                   ),
                   activeIcon: SvgPicture.asset(
                     'assets/icons/friends_filled.svg',
+                    height: 18.h,
+                    width: 18.w,
                     colorFilter: bottomBarTheme.brightness == Brightness.dark
                         ? ColorFilter.mode(AppColor.secondaryColor, BlendMode.srcIn)
                         : null,
@@ -103,19 +112,23 @@ class BottomNav extends GetView<BottomNavController> {
                 ),
                 BottomNavigationBarItem(
                   icon: bottomBarTheme.brightness == Brightness.dark
-                      ? SvgPicture.asset('assets/icons/create_button_dark.svg')
-                      : SvgPicture.asset('assets/icons/create_button_light.svg'),
-                  label: 'Create',
+                      ? SvgPicture.asset('assets/icons/create_button_dark.svg', height: 25.h, width: 25.w)
+                      : SvgPicture.asset('assets/icons/create_button_light.svg', height: 25.h, width: 25.w),
+                  label: '',
                 ),
                 BottomNavigationBarItem(
                   icon: SvgPicture.asset(
                     'assets/icons/inbox.svg',
+                    height: 18.h,
+                    width: 18.w,
                     colorFilter: bottomBarTheme.brightness == Brightness.dark
                         ? ColorFilter.mode(AppColor.buttonInactiveColor, BlendMode.srcIn)
                         : null,
                   ),
                   activeIcon: SvgPicture.asset(
                     'assets/icons/inbox_filled.svg',
+                    height: 18.h,
+                    width: 18.w,
                     colorFilter: bottomBarTheme.brightness == Brightness.dark
                         ? ColorFilter.mode(AppColor.secondaryColor, BlendMode.srcIn)
                         : null,
@@ -125,12 +138,16 @@ class BottomNav extends GetView<BottomNavController> {
                 BottomNavigationBarItem(
                   icon: SvgPicture.asset(
                     'assets/icons/profile.svg',
+                    height: 18.h,
+                    width: 18.w,
                     colorFilter: bottomBarTheme.brightness == Brightness.dark
                         ? ColorFilter.mode(AppColor.buttonInactiveColor, BlendMode.srcIn)
                         : null,
                   ),
                   activeIcon: SvgPicture.asset(
                     'assets/icons/profile_icon_filled.svg',
+                    height: 18.h,
+                    width: 18.w,
                     colorFilter: bottomBarTheme.brightness == Brightness.dark
                         ? ColorFilter.mode(AppColor.secondaryColor, BlendMode.srcIn)
                         : null,

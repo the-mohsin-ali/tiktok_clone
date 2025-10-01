@@ -11,7 +11,7 @@ class SearchedProfile extends StatelessWidget {
   final String uid;
   SearchedProfile({super.key, required this.uid});
 
-  late SearchedProfileController controller = Get.put(SearchedProfileController(uid));
+  late final SearchedProfileController controller = Get.put(SearchedProfileController(uid));
 
   @override
   Widget build(BuildContext context) {

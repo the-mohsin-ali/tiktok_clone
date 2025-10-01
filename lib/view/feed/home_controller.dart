@@ -1,3 +1,4 @@
+//previous version
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -21,7 +22,7 @@ class HomeController extends GetxController implements VideoListController {
   final videoControllers = <int, VideoPlayerController>{}.obs;
   var currentIndex = 0.obs;
 
-  int maxActiveControllers = 3;
+  int maxActiveControllers = 1;
 
   final RxBool isFollowing = false.obs;
 
@@ -53,136 +54,14 @@ class HomeController extends GetxController implements VideoListController {
     super.onClose();
   }
 
-  Future<bool> initController(int index, String url) async {
-    if (videoControllers.containsKey(index)) return true;
-
-    try {
-      final controller = VideoPlayerController.networkUrl(Uri.parse(url));
-      await controller.initialize();
-      controller.setLooping(true);
-
-      videoControllers[index] = controller;
-
-      _logControllerCounts('init index $index');
-
-      return true;
-    } catch (e) {
-      print("[HomeController] failed to init controller for $index: $e");
-      return false;
-    }
-  }
-
-  void pauseController(int index) {
-    final c = videoControllers[index];
-    if (c != null && c.value.isPlaying) {
-      try {
-        c.pause();
-      } catch (_) {}
-    }
-  }
-
-  void playController(int index) {
-    final c = videoControllers[index];
-    if (c != null && !c.value.isPlaying) {
-      try {
-        c.play();
-      } catch (_) {}
-    }
-  }
-
-  void disposeController(int index) {
-    final c = videoControllers[index];
-    if (c != null) {
-      try {
-        c.pause();
-        c.dispose();
-      } catch (_) {}
-      videoControllers.remove(index);
-      _logControllerCounts('dispose index $index');
-    }
-  }
-
-  void _logControllerCounts(String reason) {
-    print(
-      '[HomeController] controllers: ${videoControllers.length} after $reason | keys=${videoControllers.keys.toList()}',
-    );
-  }
-
-  void onPageChanged(int index, List<VideoModel> allVideos) {
-    print("onPageChanged() called");
-
+  
+  void onPageChanged(int index, List<VideoModel> allVideos) async {
+    print("onPageChanged() called index=$index");
     currentIndex.value = index;
 
-    // ✅ Init & play current video safely
-    initController(index, allVideos[index].videoUrl).then((ok) {
-      if (ok) {
-        playController(index);
-      } else {
-        print("[onPageChanged] Skipping current video at index $index due to init failure.");
-      }
-    });
-
-    // ✅ Preload next video safely
-    if (index + 1 < allVideos.length) {
-      initController(index + 1, allVideos[index + 1].videoUrl).then((ok) {
-        if (!ok) {
-          print("[onPageChanged] Skipped preload for ${index + 1}");
-        }
-      });
-    }
-
-    // ✅ Preload previous video safely
-    if (index - 1 >= 0) {
-      initController(index - 1, allVideos[index - 1].videoUrl).then((ok) {
-        if (!ok) {
-          print("[onPageChanged] Skipped preload for ${index - 1}");
-        }
-      });
-    }
-
-    // ✅ Pause any controller that's not current
-    for (final key in videoControllers.keys.toList()) {
-      if (key != index) {
-        pauseController(key);
-      }
-    }
-
-    // ✅ Dispose controllers farther than allowed window
-    final allowed = <int>{index};
-    if (maxActiveControllers >= 2 && index + 1 < allVideos.length) {
-      allowed.add(index + 1);
-    }
-    if (maxActiveControllers >= 3 && index - 1 >= 0) {
-      allowed.add(index - 1);
-    }
-
-    videoControllers.keys.where((i) => !allowed.contains(i)).toList().forEach(disposeController);
-
-    // ✅ Pagination trigger
+    // Pagination trigger
     if (index >= allVideos.length - 1) {
       fetchVideos(loadMore: true);
-    }
-  }
-
-  //helper methods for play/pausing upon tab change or screen navigation
-
-  void pauseAllVideos() {
-    for (var vc in videoControllers.values) {
-      if (vc.value.isPlaying) {
-        try {
-          vc.pause();
-        } catch (_) {}
-      }
-    }
-  }
-
-  void resumeCurrentVideo() {
-    final index = currentIndex.value;
-    final c = videoControllers[index];
-    if (c != null && !c.value.isPlaying) {
-      try {
-        c.play();
-      } catch (_) {}
     }
   }
 
@@ -237,13 +116,17 @@ class HomeController extends GetxController implements VideoListController {
         for (final video in newVideos) {
           checkIfFollowingForVideo(video);
         }
-        if (!loadMore && videos.isNotEmpty) {
-          final firstUrl = videos.first.videoUrl;
-          await initController(0, firstUrl);
-          playController(0);
-          currentIndex.value = 0; // track bhi update karo
-          videos.refresh();
-        }
+
+
+        // if (!loadMore && videos.isNotEmpty) {
+        //   final firstUrl = videos.first.videoUrl;
+        //   await initController(0, firstUrl);
+        //   if (videoControllers[0] != null && videoControllers[0]!.value.isInitialized) {
+        //     playController(0);
+        //   }
+        //   currentIndex.value = 0; // track bhi update karo
+        //   videos.refresh();
+        // }
       }
     } catch (e) {
       Utils.snackBar('Error', 'error fetching videos from database');
@@ -368,10 +251,3 @@ class HomeController extends GetxController implements VideoListController {
   // TODO: implement userVideos
   RxList<VideoModel> userVideos = <VideoModel>[].obs;
 }
-
-
-        // await docRef.update({
-        //   'likedBy': isLiked ? FieldValue.arrayRemove([currentUid]) : FieldValue.arrayUnion([currentUid]),
-        //   'likeCount': isLiked ? video.likeCount - 1 : video.likeCount + 1,
-        // });
-

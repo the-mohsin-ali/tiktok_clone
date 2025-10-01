@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import 'package:tiktok_clone/global.dart';
+import 'package:tiktok_clone/services/notification_service.dart';
 import 'package:tiktok_clone/view/auth/auth_controller.dart';
 import 'package:tiktok_clone/view/bottom_nav.dart/bottom_nav_controller.dart';
 import 'package:tiktok_clone/view/create_view/preview/preview_screen_controller.dart';
@@ -12,16 +14,14 @@ class AppBindings extends Bindings {
   @override
   void dependencies() {
     Get.put(BottomNavController());
-    Get.lazyPut<HomeController>(() => HomeController());
-    Get.lazyPut<SearchUserController>(() => SearchUserController());
-    // Get.lazyPut<FriendScreenController>(()=>FriendsScreenController());
-    Get.lazyPut<ProfileViewController>(() => ProfileViewController());
-    Get.lazyPut<PreviewScreenController>(() => PreviewScreenController());
-    Get.lazyPut<CommentsController>(() => CommentsController());
-    // Get.lazyPut<SearchUserController>(() => SearchUserController());
-    // Get.lazyPut<SearchedProfileController>(()=> SearchedProfileController());
-    // Get.lazyPut<InboxController>(() => InboxController(), );
-    Get.put(InboxController(), permanent: true);
-    Get.put(AuthController());
+    Get.lazyPut<HomeController>(() => HomeController(), fenix: true);
+    Get.lazyPut<SearchUserController>(() => SearchUserController(), fenix: true);
+    Get.lazyPut<ProfileViewController>(() => ProfileViewController(), fenix: true);
+    Get.lazyPut<PreviewScreenController>(() => PreviewScreenController(), fenix: true);
+    Get.lazyPut<CommentsController>(() => CommentsController(), fenix: true);
+    Get.lazyPut<InboxController>(() => InboxController(), fenix: true);
+    Get.lazyPut<AuthController>(() => AuthController(), fenix: true);
+
+    Get.put(NotificationService(flutterLocalNotificationsPlugin)).init();
   }
 }

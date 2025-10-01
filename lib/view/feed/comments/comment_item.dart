@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:path/path.dart';
 import 'package:tiktok_clone/models/comments_model.dart';
 import 'package:timeago/timeago.dart' as timeago;
 

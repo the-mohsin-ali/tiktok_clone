@@ -6,7 +6,7 @@ import 'package:tiktok_clone/view/profile_view/profile_view_controller.dart';
 import 'package:tiktok_clone/view/profile_view/video_grid_item.dart';
 
 class ProfileView extends GetView<ProfileViewController> {
-  ProfileView({super.key});
+  const ProfileView({super.key});
 
   // final ProfileViewController controller = Get.find();
 

@@ -33,31 +33,6 @@ class ProfileViewController extends GetxController with VideoPageMixin implement
     listenFollowingCount(currentUid!);
   }
 
-  // void register(VideoPlayerController controller) {
-  //   activeVideoControllers.add(controller);
-  // }
-
-  // void pauseAllVideos() {
-  //   for (var controller in activeVideoControllers) {
-  //     if (controller.value.isPlaying) controller.pause();
-  //   }
-  // }
-
-  // void resumeAllVideos() {
-  //   for (var controller in activeVideoControllers) {
-  //     if (!controller.value.isPlaying) controller.play();
-  //   }
-  // }
-
-  // @override
-  // void onClose() {
-  //   for (var controller in activeVideoControllers) {
-  //     controller.dispose();
-  //   }
-  //   activeVideoControllers.clear();
-  //   super.onClose();
-  // }
-
   Future<void> _getUserProfile() async {
 
     print("_getUserProfile() is run");

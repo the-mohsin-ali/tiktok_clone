@@ -4,5 +4,5 @@ class RoutesNames {
   static const String signup = '/signup';
   static const String home = '/home';
   static const String InboxView = '/inbox';
-  // static const String searchedProfile = '/searchedProfile';
+  static const String searchedProfile = '/searchedProfile';
 }

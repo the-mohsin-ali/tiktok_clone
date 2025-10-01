@@ -1,9 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone/constants/color/app_color.dart';
-import 'package:tiktok_clone/constants/utils/keyboard_animation_handler.dart';
 import 'package:tiktok_clone/models/comments_model.dart';
 import 'package:tiktok_clone/models/video_model.dart';
 import 'package:tiktok_clone/view/feed/comments/comment_item.dart';
@@ -11,8 +9,9 @@ import 'package:tiktok_clone/view/feed/comments/comments_controller.dart';
 
 class CommentsBottomsheet extends StatefulWidget {
   final VideoModel video;
+  final ScrollController? scrollController;
 
-  const CommentsBottomsheet({super.key, required this.video});
+  const CommentsBottomsheet({super.key, required this.video, this.scrollController});
 
   @override
   State<CommentsBottomsheet> createState() => _CommentsBottomsheetState();
@@ -26,10 +25,6 @@ class _CommentsBottomsheetState extends State<CommentsBottomsheet> {
   void initState() {
     super.initState();
     controller = Get.find();
-
-    // ADDITIONAL KEYBOARD OPTIMIZATION
-    KeyboardAnimationHandler.optimizeKeyboardPerformance();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.initComments(widget.video.videoId);
     });
@@ -43,36 +38,35 @@ class _CommentsBottomsheetState extends State<CommentsBottomsheet> {
 
   @override
   Widget build(BuildContext context) {
-    // final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: GestureDetector(
-        onTap: () => _focusNode.unfocus(),
-        child:
-            // OPTION 1: REPLACE DraggableScrollableSheet with KeyboardOptimizedBottomSheet
-            KeyboardOptimizedBottomSheet(
-              initialChildSize: 0.6,
-              minChildSize: 0.3,
-              maxChildSize: 0.9,
-              child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: const BoxDecoration(borderRadius: BorderRadius.vertical(top: Radius.circular(8))),
-                child: Column(
-                  children: [
-                    CommentsList(controller: controller, videoId: widget.video.videoId),
-                    ReplyWidget(controller: controller),
-                    BottomTextField(controller: controller, videoId: widget.video.videoId, focusNode: _focusNode),
-                  ],
+    return GestureDetector(
+      onTap: () => _focusNode.unfocus(),
+      child: Column(
+        children: [
+          // 👇 drag handle (optional)
+          Container(
+            width: 40.w,
+            height: 4.h,
+            margin: EdgeInsets.symmetric(vertical: 8.h),
+            decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)),
+          ),
+          Expanded(
+            child: Column(
+              children: [
+                CommentsList(
+                  controller: controller,
+                  videoId: widget.video.videoId,
+                  scrollController: widget.scrollController,
                 ),
-              ),
+                ReplyWidget(controller: controller),
+                BottomTextField(controller: controller, videoId: widget.video.videoId, focusNode: _focusNode),
+              ],
             ),
+          ),
+        ],
       ),
     );
   }
 }
-
-// Keep your existing BottomTextField, CommentsList, _CommentWithReplies, and ReplyWidget classes
-// They don't need to change - just copy them from your current file
 
 class BottomTextField extends StatelessWidget {
   const BottomTextField({super.key, required this.controller, required this.videoId, required this.focusNode});
@@ -87,7 +81,7 @@ class BottomTextField extends StatelessWidget {
       color: Theme.of(context).scaffoldBackgroundColor,
       child: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 8.h),
+          padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 8.w),
           child: Row(
             children: [
               Obx(() {
@@ -189,17 +183,20 @@ class CommentsList extends StatelessWidget {
             Expanded(
               child: comments.isEmpty
                   ? const Center(child: Text("No comments yet."))
-                  : ListView.builder(
-                      controller: scrollController,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: comments.length,
-                      cacheExtent: 500,
-                      itemBuilder: (context, index) {
-                        final comment = comments[index];
-                        if (comment.isReply) return const SizedBox.shrink();
+                  : Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: ListView.builder(
+                        controller: scrollController,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: comments.length,
+                        cacheExtent: 500,
+                        itemBuilder: (context, index) {
+                          final comment = comments[index];
+                          if (comment.isReply) return const SizedBox.shrink();
 
-                        return _CommentWithReplies(comment: comment, controller: controller, videoId: videoId);
-                      },
+                          return _CommentWithReplies(comment: comment, controller: controller, videoId: videoId);
+                        },
+                      ),
                     ),
             ),
           ],
@@ -218,43 +215,45 @@ class _CommentWithReplies extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CommentItem(
-          model: comment,
-          videoId: videoId,
-          onReply: () => controller.startReplyTo(comment),
-          onLike: () => controller.likeComment(videoId, comment.commentId),
-        ),
-        StreamBuilder<List<CommentsModel>>(
-          stream: controller.getReplies(videoId, comment.commentId),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const SizedBox.shrink();
-            }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Parent Comment
+          CommentItem(
+            model: comment,
+            videoId: videoId,
+            onReply: () => controller.startReplyTo(comment),
+            onLike: () => controller.likeComment(videoId, comment.commentId),
+          ),
 
-            final replies = snapshot.data!;
-            return ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: replies.length,
-              itemBuilder: (context, index) {
-                final reply = replies[index];
-                return Padding(
-                  padding: EdgeInsets.only(left: 46.w),
-                  child: CommentItem(
-                    model: reply,
-                    videoId: videoId,
-                    onReply: () => controller.startReplyTo(reply),
-                    onLike: () => controller.likeComment(videoId, reply.commentId),
-                  ),
+          // Replies with fixed indent
+          if (comment.repliesStream != null)
+            StreamBuilder<List<CommentsModel>>(
+              stream: controller.getReplies(videoId, comment.commentId),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox.shrink();
+
+                final replies = snapshot.data!;
+
+                return Column(
+                  children: replies.map((reply) {
+                    return Padding(
+                      padding: EdgeInsets.only(left: 46.w, top: 4),
+                      child: CommentItem(
+                        model: reply,
+                        videoId: videoId,
+                        onReply: () => controller.startReplyTo(reply),
+                        onLike: () => controller.likeComment(videoId, reply.commentId),
+                      ),
+                    );
+                  }).toList(),
                 );
               },
-            );
-          },
-        ),
-      ],
+            ),
+        ],
+      ),
     );
   }
 }

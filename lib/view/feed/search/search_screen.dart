@@ -1,11 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone/constants/color/app_color.dart';
 import 'package:tiktok_clone/view/feed/search/search_results_screen.dart';
-import 'package:tiktok_clone/view/feed/search/search_user_controller.dart';
-import 'package:tiktok_clone/view/feed/search/searched_profile.dart';
 
 // class SearchScreen extends StatelessWidget {
 //   SearchScreen({super.key});

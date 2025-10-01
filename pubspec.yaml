@@ -56,10 +56,20 @@ dependencies:
   tuple: ^2.0.2
   file_picker: ^10.3.3
   dio: ^5.9.0
+  flutter_local_notifications: ^19.4.2
+  firebase_messaging: ^16.0.2
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -68,6 +78,12 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
 
+
+flutter_native_splash:
+  color: 0xFF161722
+  image: assets/images/app_icon.png
+  android: true
+  ios: true
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -123,7 +139,6 @@ flutter:
       fonts:
         - asset: assets/fonts/TikTokSans_24pt_SemiCondensed-Regular.ttf
           weight: 400
-
 
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic

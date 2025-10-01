@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:tiktok_clone/constants/color/app_color.dart';
 import 'package:tiktok_clone/services/splash_service.dart';
 
 class Splashscreen extends StatefulWidget {
-  const Splashscreen({super.key});
+  final String? notificationUserId;
+  const Splashscreen({super.key, this.notificationUserId});
 
   @override
   State<Splashscreen> createState() => _SplashscreenState();
@@ -14,22 +16,28 @@ class _SplashscreenState extends State<Splashscreen> {
   void initState() {
     super.initState();
     // Call the splash service to check login status
-    SplashService().isLogin();
+    SplashService(notificationUserId: widget.notificationUserId).handleStartup();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Image.asset('assets/images/app_icon.png', fit: BoxFit.cover, height: 60.h, width: 60.h),
-            SizedBox(height: 10.h),
-            Image.asset('assets/images/TikTok_Logo.png', fit: BoxFit.cover, height: 20.h),
-          ],
-        ),
+      backgroundColor: AppColor.primaryColor,
+      body: Stack(
+        children: [
+          // Center the column horizontally, offset vertically
+          Align(
+            alignment: Alignment(0, -0.23), // x = 0 (center), y = -0.3 (slightly up)
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // Wrap content vertically
+              children: [
+                Image.asset('assets/images/app_icon.png', fit: BoxFit.cover, height: 70.h, width: 70.w),
+                SizedBox(height: 10.h),
+                Image.asset('assets/images/tiktok_name.png', fit: BoxFit.cover, height: 25.h),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

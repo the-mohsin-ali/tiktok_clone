@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone/constants/utils/utils.dart';
@@ -49,29 +50,20 @@ class CommentsController extends GetxController {
 
   void _checkCommentFormStatus() {
     final text = commentController.text.trim();
-    if (replyingTo.value != null) {
-      final mention = "@${replyingTo.value!.userName}";
-      isFormFilled.value =
-          commentController.text.trim().startsWith(mention) && commentController.text.trim().length > mention.length;
-    } else {
-      isFormFilled.value = commentController.text.trim().isNotEmpty;
-    }
+    isFormFilled.value = text.isNotEmpty;
 
     print('Comment Form filled status: ${isFormFilled.value}');
   }
 
   Future<void> _getProfile() async {
-    // final url = await SharedPrefs.getProfileUrl() ?? '';
-    // profileUrl?.value = url ;
-    // final name = await SharedPrefs.getUserName();
-    // userName.value = name;
+    print("_getProfile() called");
     final userData = await SharedPrefs.getUserFromPrefs();
     if (userData != null) {
-      profileUrl?.value = userData.profilePhoto!;
+      profileUrl?.value = userData.profilePhoto ?? '';
       userName.value = userData.userName;
     }
-    print("Loaded profile URL & userName in getProfileurl method: ${profileUrl?.value} && ${userName.value}");
-    print("Loaded userName in getProfileUrl method: ${userName.value}");
+    print("_getProfile() Loaded profile URL: ${profileUrl?.value}");
+    print("_getProfile() Loaded userName in getProfileUrl method: ${userName.value}");
   }
 
   Stream<List<CommentsModel>> getCommentsForVideo(String videoId) {
@@ -118,7 +110,6 @@ class CommentsController extends GetxController {
 
   void startReplyTo(CommentsModel comment) {
     replyingTo.value = comment;
-    commentController.text = "@${comment.userName} ";
     commentController.selection = TextSelection.fromPosition(TextPosition(offset: commentController.text.length));
     commentFocusNode.requestFocus();
   }
@@ -130,29 +121,30 @@ class CommentsController extends GetxController {
   }
 
   Future<void> addReply(String videoId, String parentCommentId) async {
-    final currentUser = await SharedPrefs.getUserFromPrefs();
-    if (currentUser == null) return;
-
     String replyText = commentController.text.trim();
-    final mention = "@${replyingTo.value?.userName ?? ''}";
 
-    // Remove the mention if it's at the start
-    if (replyText.startsWith(mention)) {
-      replyText = replyText.substring(mention.length).trim();
-    }
-
-    // Don't allow empty replies
     if (replyText.isEmpty) {
       Utils.snackBar("Error", "Reply cannot be empty.");
       return;
     }
 
-    print("value in replytext: $replyText");
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser == null) return;
+
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(firebaseUser.uid).get();
+    if (!userDoc.exists) {
+      Utils.snackBar("Error", "User not found");
+      return;
+    }
+
+    final userData = userDoc.data()!;
+    final userName = userData['userName'] ?? "Unknown";
+    final avatarUrl = userData['profilePhoto'] ?? "";
 
     final reply = CommentsModel(
       commentId: '',
-      avatarUrl: currentUser.profilePhoto,
-      userName: currentUser.userName,
+      avatarUrl: avatarUrl,
+      userName: userName,
       comment: replyText,
       uploadedAt: DateTime.now(),
       likedBy: [],
@@ -163,15 +155,12 @@ class CommentsController extends GetxController {
     final videoRef = FirebaseFirestore.instance.collection('videos').doc(videoId);
 
     try {
-      final newDoc = await FirebaseFirestore.instance
-          .collection('videos')
-          .doc(videoId)
-          .collection('comments')
-          .add(reply.toJson());
-      newDoc.update({'commentId': newDoc.id});
-
+      final newDoc = await videoRef.collection('comments').add(reply.toJson());
+      await newDoc.update({'commentId': newDoc.id});
       await videoRef.update({'commentCount': FieldValue.increment(1)});
+
       clearFields();
+      replyingTo.value = null;
     } catch (e) {
       Utils.snackBar('Error', 'Failed to post reply');
       print("Reply error: $e");
@@ -187,8 +176,8 @@ class CommentsController extends GetxController {
         .where('parentCommentId', isEqualTo: parentId)
         .orderBy('uploadedAt', descending: true)
         .snapshots()
-        .map((snapshots) {
-          return snapshots.docs.map((doc) {
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
             return CommentsModel.fromJson(doc.data(), doc.id);
           }).toList();
         });

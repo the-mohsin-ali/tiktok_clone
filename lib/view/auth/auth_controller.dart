@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -168,6 +169,9 @@ class AuthController extends GetxController {
       String email = emailController.text.trim();
       String password = passwordController.text.trim();
       UserCredential userCredential = await auth.signInWithEmailAndPassword(email: email, password: password);
+
+      await saveDeviceToken();
+
       User? user = userCredential.user;
       print("user data at login : $user");
       if (user != null) {
@@ -186,14 +190,12 @@ class AuthController extends GetxController {
 
           final userData = await SharedPrefs.getUserFromPrefs();
 
-          print(
-            '''User Data saved in login: 
+          print('''User Data saved in login: 
             User ID: ${await SharedPrefs.getUserId()}
             Email: ${userData?.email}
             User Name: ${userData?.userName}
             User photo url: ${userData?.profilePhoto}
-            User isLoggedIn: ${await SharedPrefs.getIsLoggedIn()}''',
-          );
+            User isLoggedIn: ${await SharedPrefs.getIsLoggedIn()}''');
         } else {
           print('User document does not exist');
           return;
@@ -208,6 +210,21 @@ class AuthController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> saveDeviceToken() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'fcmToken': token});
+    }
+
+    // Listen for token refresh and update on change
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'fcmToken': newToken});
+    });
   }
 
   Future<void> logout() async {

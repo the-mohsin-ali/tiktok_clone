@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:tiktok_clone/view/feed/search/search_controller.dart';
 import 'package:tiktok_clone/view/feed/search/searched_profile.dart';
 import 'package:tiktok_clone/view/profile_view/video_grid_item.dart';
 import 'package:tiktok_clone/view/feed/search/search_controller.dart' as my_search;
@@ -64,20 +63,23 @@ class SearchResultsScreen extends StatelessWidget {
                     style: TextStyle(fontFamily: 'TikTokSansExpanded', fontSize: 18.sp, fontWeight: FontWeight.bold),
                   ),
                 ),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: controller.videos.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    childAspectRatio: 9 / 16,
-                    crossAxisSpacing: 4,
-                    mainAxisSpacing: 4,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: controller.videos.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      childAspectRatio: 9 / 16,
+                      crossAxisSpacing: 4,
+                      mainAxisSpacing: 4,
+                    ),
+                    itemBuilder: (context, index) {
+                      final video = controller.videos[index];
+                      return VideoGridItem(videoUrl: video.videoUrl, index: index, controller: controller);
+                    },
                   ),
-                  itemBuilder: (context, index) {
-                    final video = controller.videos[index];
-                    return VideoGridItem(videoUrl: video.videoUrl, index: index, controller: controller);
-                  },
                 ),
               ],
             ],

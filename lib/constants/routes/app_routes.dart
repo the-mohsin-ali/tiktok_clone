@@ -5,8 +5,6 @@ import 'package:tiktok_clone/view/SplashScreen.dart';
 import 'package:tiktok_clone/view/auth/login_view.dart';
 import 'package:tiktok_clone/view/auth/signup.dart';
 import 'package:tiktok_clone/view/bottom_nav.dart/bottom_nav.dart';
-import 'package:tiktok_clone/view/inbox_view/inbox_controller.dart';
-import 'package:tiktok_clone/view/inbox_view/inbox_view.dart';
 // import 'package:tiktok_clone/view/bottom_nav.dart/bottom_nav_controller.dart';
 
 class AppRoutes {
@@ -41,8 +39,8 @@ class AppRoutes {
     ),
 
     // GetPage(
-    //   name: RoutesNames.InboxView,
-    //   page: () => const InboxView(),
+    //   name: RoutesNames.searchedProfile,
+    //   page: () => SearchedProfile(uid: '',),
     //   binding: BindingsBuilder(() {
     //     Get.put(InboxController());
     //   }),

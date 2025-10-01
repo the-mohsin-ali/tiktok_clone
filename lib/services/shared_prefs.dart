@@ -27,10 +27,6 @@ class SharedPrefs {
 
     await sp.setBool(isLoggedIn, true);
     await sp.setString(userId, userModel.uid);
-
-    // await sp.setString(userName, userModel.userName);
-    // await sp.setString(userEmail, userModel.email);
-    // await sp.setString(profileUrl, userModel.profilePhoto);
   }
 
   static Future<UserModel?> getUserFromPrefs() async {
@@ -58,6 +54,7 @@ class SharedPrefs {
   static Future<bool?> getIsLoggedIn() async{
     return sp.getBool(isLoggedIn);
   }
+
 
   static Future<void> clearUserData() async {
     cachedUid = null;
