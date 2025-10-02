@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone/constants/utils/utils.dart';
 import 'package:tiktok_clone/models/comments_model.dart';
+import 'package:tiktok_clone/models/threaded_comments.dart';
 import 'package:tiktok_clone/services/shared_prefs.dart';
 
 class CommentsController extends GetxController {
@@ -16,10 +17,18 @@ class CommentsController extends GetxController {
   final isFormFilled = false.obs;
 
   RxList<CommentsModel> comments = <CommentsModel>[].obs;
+
   StreamSubscription? _commentsSub;
   // late final Stream<List<CommentsModel>> commentsStream;
 
   final Rxn<CommentsModel> replyingTo = Rxn<CommentsModel>();
+
+  RxList<ThreadedComment> threadedComments = <ThreadedComment>[].obs;
+  // Track "view more" states
+  final RxMap<String, bool> isLoadingReplies = <String, bool>{}.obs;
+  final RxMap<String, bool> hasMoreReplies = <String, bool>{}.obs;
+
+  final Map<String, DocumentSnapshot> _lastReplyDoc = {};
 
   @override
   void onInit() {
@@ -35,12 +44,113 @@ class CommentsController extends GetxController {
     super.onClose();
   }
 
-  void initComments(String videoId) {
-    // commentsStream = getCommentsForVideo(videoId);
+  void initComments(String videoId) async {
+    _lastReplyDoc.clear();
+
+    // threadedComments.clear();
+
+    // comments.clear();
+
     _commentsSub?.cancel();
-    _commentsSub = getCommentsForVideo(videoId).listen((data) {
-      comments.assignAll(data);
-    });
+    // _commentsSub = FirebaseFirestore.instance
+    //     .collection('videos')
+    //     .doc(videoId)
+    //     .collection('comments')
+    //     .orderBy('uploadedAt', descending: false)
+    //     .snapshots()
+    //     .map((snap) => snap.docs.map((doc) => CommentsModel.fromJson(doc.data(), doc.id)).toList())
+    //     .map((allComments) => _buildThreads(allComments, null))
+    //     .listen((data) {
+    //       threadedComments.assignAll(data);
+    //     });
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('videos')
+        .doc(videoId)
+        .collection('comments')
+        .where('isReply', isEqualTo: false)
+        .orderBy('uploadedAt', descending: true)
+        .get();
+
+    threadedComments.value = snapshot.docs.map((doc) {
+      final comment = CommentsModel.fromJson(doc.data(), doc.id);
+      return ThreadedComment(comment: comment, replies: []);
+    }).toList();
+
+    for (var t in threadedComments) {
+      hasMoreReplies[t.comment.commentId] = true;
+      isLoadingReplies[t.comment.commentId] = false;
+    }
+  }
+
+  // List<ThreadedComment> _buildThreads(List<CommentsModel> allComments, String? parentId) {
+  //   return allComments
+  //       .where((c) => c.parentCommentId == parentId)
+  //       .map((c) => ThreadedComment(comment: c, replies: _buildThreads(allComments, c.commentId)))
+  //       .toList()
+  //     ..sort((a, b) => a.comment.uploadedAt.compareTo(b.comment.uploadedAt));
+  // }
+
+  ThreadedComment? _findThread(List<ThreadedComment> list, String id) {
+    for (var t in list) {
+      if (t.comment.commentId == id) return t;
+      final found = _findThread(t.replies, id);
+      if (found != null) return found;
+    }
+    return null;
+  }
+
+  String? findParentUserName(String? parentId) {
+    if (parentId == null) return null;
+
+    ThreadedComment? parentThread = _findThread(threadedComments, parentId);
+    return parentThread?.comment.userName;
+  }
+
+  Future<void> fetchReplies(String videoId, String parentId, {int limit = 3}) async {
+    if (isLoadingReplies[parentId] == true) return;
+    isLoadingReplies[parentId] = true;
+
+    Query query = FirebaseFirestore.instance
+        .collection('videos')
+        .doc(videoId)
+        .collection('comments')
+        .where('parentCommentId', isEqualTo: parentId)
+        .orderBy('uploadedAt', descending: false)
+        .limit(limit);
+
+    if (_lastReplyDoc.containsKey(parentId)) {
+      query = query.startAfterDocument(_lastReplyDoc[parentId]!);
+    }
+
+    final snapshot = await query.get();
+    print("Fetched ${snapshot.docs.length} replies for $parentId");
+
+    if (snapshot.docs.isNotEmpty) {
+      final replies = snapshot.docs
+          .map((doc) => CommentsModel.fromJson(doc.data() as Map<String, dynamic>, doc.id))
+          .toList();
+
+      final parentThread = _findThread(threadedComments, parentId);
+      if (parentThread != null) {
+        parentThread.replies.addAll(
+          replies.map((c) {
+            // 🔑 Register reply state for nested "View more" support
+            hasMoreReplies[c.commentId] = true;
+            isLoadingReplies[c.commentId] = false;
+            return ThreadedComment(comment: c, replies: []);
+          }),
+        );
+        threadedComments.refresh();
+      }
+
+      _lastReplyDoc[parentId] = snapshot.docs.last;
+      hasMoreReplies[parentId] = snapshot.docs.length == limit;
+    } else {
+      hasMoreReplies[parentId] = false;
+    }
+
+    isLoadingReplies[parentId] = false;
   }
 
   void clearFields() {
@@ -64,20 +174,6 @@ class CommentsController extends GetxController {
     }
     print("_getProfile() Loaded profile URL: ${profileUrl?.value}");
     print("_getProfile() Loaded userName in getProfileUrl method: ${userName.value}");
-  }
-
-  Stream<List<CommentsModel>> getCommentsForVideo(String videoId) {
-    return FirebaseFirestore.instance
-        .collection('videos')
-        .doc(videoId)
-        .collection('comments')
-        .orderBy('uploadedAt', descending: true)
-        .snapshots()
-        .map((snapshots) {
-          return snapshots.docs.map((doc) {
-            return CommentsModel.fromJson(doc.data(), doc.id);
-          }).toList();
-        });
   }
 
   Future<void> addComment(String videoId) async {
@@ -165,22 +261,6 @@ class CommentsController extends GetxController {
       Utils.snackBar('Error', 'Failed to post reply');
       print("Reply error: $e");
     }
-  }
-
-  Stream<List<CommentsModel>> getReplies(String videoId, String parentId) {
-    return FirebaseFirestore.instance
-        .collection('videos')
-        .doc(videoId)
-        .collection('comments')
-        .where('isReply', isEqualTo: true)
-        .where('parentCommentId', isEqualTo: parentId)
-        .orderBy('uploadedAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
-          return snapshot.docs.map((doc) {
-            return CommentsModel.fromJson(doc.data(), doc.id);
-          }).toList();
-        });
   }
 
   final Map<String, Timer> _debounceTimers = {};

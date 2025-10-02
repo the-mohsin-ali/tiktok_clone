@@ -10,7 +10,6 @@ class CommentsModel {
   final int commentLikeCount;
   final List<String> likedBy;
   final DateTime uploadedAt;
-  Stream<List<CommentsModel>>? repliesStream;
 
   CommentsModel({
     required this.commentId,
@@ -22,7 +21,6 @@ class CommentsModel {
     this.isReply = false,
     this.parentCommentId,
     required this.uploadedAt,
-    this.repliesStream,
   });
 
   Map<String, dynamic> toJson() {

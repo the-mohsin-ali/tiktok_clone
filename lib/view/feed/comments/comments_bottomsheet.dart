@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_clone/constants/color/app_color.dart';
-import 'package:tiktok_clone/models/comments_model.dart';
+import 'package:tiktok_clone/models/threaded_comments.dart';
 import 'package:tiktok_clone/models/video_model.dart';
 import 'package:tiktok_clone/view/feed/comments/comment_item.dart';
 import 'package:tiktok_clone/view/feed/comments/comments_controller.dart';
@@ -40,34 +40,153 @@ class _CommentsBottomsheetState extends State<CommentsBottomsheet> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => _focusNode.unfocus(),
-      child: Column(
-        children: [
-          // 👇 drag handle (optional)
-          Container(
-            width: 40.w,
-            height: 4.h,
-            margin: EdgeInsets.symmetric(vertical: 8.h),
-            decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                CommentsList(
-                  controller: controller,
-                  videoId: widget.video.videoId,
-                  scrollController: widget.scrollController,
-                ),
-                ReplyWidget(controller: controller),
-                BottomTextField(controller: controller, videoId: widget.video.videoId, focusNode: _focusNode),
-              ],
-            ),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxHeight = constraints.maxHeight;
+
+          return Column(
+            children: [
+              // --- Drag Handle ---
+              Container(
+                width: 40.w,
+                height: 4.h,
+                margin: EdgeInsets.symmetric(vertical: 8.h),
+                decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)),
+              ),
+
+              // --- Comment Count ---
+              Obx(() {
+                final count = controller.threadedComments.length;
+                return Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4.h),
+                  child: Text(
+                    '$count comments',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
+                  ),
+                );
+              }),
+
+              // --- Scrollable Comments Tree ---
+              Expanded(
+                // height: maxHeight - 140.h,
+                child: Obx(() {
+                  final threads = controller.threadedComments;
+                  if (threads.isEmpty) {
+                    return const Center(child: Text("No comments yet."));
+                  }
+
+                  return ListView.builder(
+                    controller: widget.scrollController,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: threads.length,
+                    itemBuilder: (context, index) {
+                      return buildComment(threads[index], widget.video.videoId, depth: 0);
+                    },
+                  );
+                }),
+              ),
+
+              // --- Reply Indicator ---
+              ReplyWidget(controller: controller),
+
+              // --- Bottom Text Field ---
+              BottomTextField(controller: controller, videoId: widget.video.videoId, focusNode: _focusNode),
+            ],
+          );
+        },
       ),
+    );
+  }
+
+  /// Recursively build comment + its replies
+  Widget buildComment(ThreadedComment thread, String videoId, {int depth = 0}) {
+    final comment = thread.comment;
+
+    const double indentPerLevel = 40.0;
+    // visual clamp: depth 0 => 0, depth >=1 => one indent only
+    final double leftForThis = depth >= 1 ? indentPerLevel : 0.0;
+    // the replies and "view more" will all use replyIndent (same visual indent)
+    final double replyIndent = indentPerLevel;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // --- the comment row itself — absolute margin based on depth ---
+        Container(
+          margin: EdgeInsets.only(left: leftForThis, top: depth == 0 ? 8 : 4, bottom: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (depth >= 2) ...[
+                Builder(
+                  builder: (_) {
+                    final parentUserName = controller.findParentUserName(comment.parentCommentId);
+                    if (parentUserName == null) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 40),
+                      child: Text.rich(
+                        TextSpan(
+                          style: TextStyle(fontSize: 12.sp, color: Colors.grey), // Style for the non-bold text
+                          children: <TextSpan>[
+                            const TextSpan(text: 'in reply to '),
+                            TextSpan(
+                              text: parentUserName,
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey.shade100),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w),
+                      child: CommentItem(
+                        model: comment,
+                        videoId: videoId,
+                        onReply: () => controller.startReplyTo(comment),
+                        onLike: () => controller.likeComment(videoId, comment.commentId),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // --- render children recursively (no extra wrapper padding) ---
+        for (var replyThread in thread.replies) buildComment(replyThread, videoId, depth: depth + 1),
+
+        // --- View More Replies button (aligned with replies) ---
+        Obx(() {
+          final hasMore = controller.hasMoreReplies[comment.commentId] ?? false;
+          final loading = controller.isLoadingReplies[comment.commentId] ?? false;
+          if (!hasMore) return const SizedBox.shrink();
+
+          return Container(
+            margin: EdgeInsets.only(left: replyIndent, bottom: 8),
+            child: TextButton(
+              onPressed: loading ? null : () => controller.fetchReplies(videoId, comment.commentId),
+              child: loading
+                  ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text("View more replies"),
+            ),
+          );
+        }),
+      ],
     );
   }
 }
 
+// Bottom text field remains same as before
 class BottomTextField extends StatelessWidget {
   const BottomTextField({super.key, required this.controller, required this.videoId, required this.focusNode});
 
@@ -112,17 +231,6 @@ class BottomTextField extends StatelessWidget {
                     fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[200],
                     contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
                   ),
                 ),
               ),
@@ -162,102 +270,7 @@ class BottomTextField extends StatelessWidget {
   }
 }
 
-class CommentsList extends StatelessWidget {
-  const CommentsList({super.key, required this.controller, required this.videoId, this.scrollController});
-
-  final CommentsController controller;
-  final String videoId;
-  final ScrollController? scrollController;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final comments = controller.comments;
-
-      return Flexible(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(alignment: Alignment.center, child: Text('${comments.length} comments')),
-            SizedBox(height: 10.h),
-            Expanded(
-              child: comments.isEmpty
-                  ? const Center(child: Text("No comments yet."))
-                  : Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: ListView.builder(
-                        controller: scrollController,
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: comments.length,
-                        cacheExtent: 500,
-                        itemBuilder: (context, index) {
-                          final comment = comments[index];
-                          if (comment.isReply) return const SizedBox.shrink();
-
-                          return _CommentWithReplies(comment: comment, controller: controller, videoId: videoId);
-                        },
-                      ),
-                    ),
-            ),
-          ],
-        ),
-      );
-    });
-  }
-}
-
-class _CommentWithReplies extends StatelessWidget {
-  const _CommentWithReplies({required this.comment, required this.controller, required this.videoId});
-
-  final CommentsModel comment;
-  final CommentsController controller;
-  final String videoId;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Parent Comment
-          CommentItem(
-            model: comment,
-            videoId: videoId,
-            onReply: () => controller.startReplyTo(comment),
-            onLike: () => controller.likeComment(videoId, comment.commentId),
-          ),
-
-          // Replies with fixed indent
-          // if (comment.repliesStream != null)
-          StreamBuilder<List<CommentsModel>>(
-            stream: controller.getReplies(videoId, comment.commentId),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData || snapshot.data!.isEmpty) return const SizedBox.shrink();
-
-              final replies = snapshot.data!;
-
-              return Column(
-                children: replies.map((reply) {
-                  return Padding(
-                    padding: EdgeInsets.only(left: 46.w, top: 4),
-                    child: CommentItem(
-                      model: reply,
-                      videoId: videoId,
-                      onReply: () => controller.startReplyTo(reply),
-                      onLike: () => controller.likeComment(videoId, reply.commentId),
-                    ),
-                  );
-                }).toList(),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
+// ReplyWidget remains the same
 class ReplyWidget extends StatelessWidget {
   const ReplyWidget({super.key, required this.controller});
 
