@@ -29,6 +29,21 @@ Cloud Firestore – Real-time data and chat
 
 Firebase Storage – Video upload and hosting
 
+## 📸 Screenshots
+
+| Home Feed | Comments | Chat |
+|:---------:|:--------:|:----:|
+| <img src="https://github.com/user-attachments/assets/8528523c-aed5-4b3e-9a70-c520aaa8ea60" width="220"/> | <img width="220" alt="comments_2" src="https://github.com/user-attachments/assets/0a730b8a-d646-48f0-ba00-686da4342bca" /> | <img src="https://github.com/user-attachments/assets/d14c2958-d346-4109-baee-29c8d41afd52" width="220"/> |
+
+| Search | Record Video | Profile |
+|:------:|:------------:|:-------:|
+| <img src="https://github.com/user-attachments/assets/dc4b2815-3734-47cc-819a-82bbaee308cc" width="220"/> | <img src="https://github.com/user-attachments/assets/f2f2c666-e36f-4f63-8bc0-b88559d87b9d" width="220"/> | <img width="220" alt="profile" src="https://github.com/user-attachments/assets/037b941d-024d-4571-8eda-4b3b252b468f" /> |
+
+
+| Login | Register | Splash |
+|:-----:|:--------:|:------:|
+| <img src="https://github.com/user-attachments/assets/eae5f30c-2aa7-4957-a8d8-810b90669387" width="220"/> | <img src="https://github.com/user-attachments/assets/3375d7cf-1e95-4660-8cc8-72eaabf86fe4" width="220"/> | <img src="https://github.com/user-attachments/assets/bbe7f175-7539-4df1-8d9a-1c69ed2ddd97" width="220"/> |
+
 🧠 Highlights
 
 Built with a modular GetX architecture for clean and reactive UI updates.
@@ -49,7 +64,7 @@ Before running, set up Firebase and add your google-services.json / GoogleServic
 
 👨‍💻 Developer
 
-Mohsin Ali
+Mohsin Ali  | 
 Flutter & Cross-Platform Developer
 LinkedIn
  | GitHub
