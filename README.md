@@ -17,17 +17,27 @@ Profile: Manage user info, bio, and uploaded reels.
 
 Search: Find users and videos by keywords or hashtags.
 
-🔧 Tech Stack
+## 🛠 Tech Stack
 
-Flutter – Cross-platform UI development
+<p align="center">
 
-GetX – State management, dependency injection, and navigation
+<img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white"/>
+<img src="https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white"/>
+<img src="https://img.shields.io/badge/GetX-8A2BE2?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black"/>
+<img src="https://img.shields.io/badge/Cloud%20Firestore-FFCA28?style=for-the-badge&logo=firebase&logoColor=black"/>
+<img src="https://img.shields.io/badge/Firebase%20Storage-FFCA28?style=for-the-badge&logo=firebase&logoColor=black"/>
 
-Firebase Authentication – User authentication and login
+</p>
 
-Cloud Firestore – Real-time data and chat
-
-Firebase Storage – Video upload and hosting
+| Technology | Purpose |
+|------------|---------|
+| Flutter | Cross-platform UI |
+| Dart | Programming language |
+| GetX | State management, dependency injection & navigation |
+| Firebase Authentication | User authentication |
+| Cloud Firestore | Real-time database |
+| Firebase Storage | Video hosting |
 
 ## 📸 Screenshots
 
