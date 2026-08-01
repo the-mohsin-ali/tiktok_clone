@@ -1,7 +1,9 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:tiktok_clone/view/feed/search/searched_profile.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:tiktok_clone/constants/widgets/notification_permission_dialog.dart';
+import 'package:tiktok_clone/features/feed/search/searched_profile.dart';
 
 class NotificationService extends GetxService {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
@@ -12,6 +14,28 @@ class NotificationService extends GetxService {
     print("NotificationService.init() called");
     _initFCMListeners();
     return this;
+  }
+
+  static Future<void> requestNotificationPermission() async {
+
+    final status = await Permission.notification.status;
+
+    if(status.isGranted) return;
+
+    if(status.isPermanentlyDenied){
+      print("Notification Status Permanently denied");
+      showNotificationPermissionDialog();
+      return;
+    }
+
+    if (status.isDenied) {
+      final result = await Permission.notification.request();
+      if (result.isGranted) {
+        print("✅ Notification permission granted");
+      } else {
+        print("❌ Notification permission denied");
+      }
+    }
   }
 
   void _initFCMListeners() {
@@ -76,13 +100,11 @@ class NotificationService extends GetxService {
     const notificationDetails = NotificationDetails(android: androidDetails);
 
     await flutterLocalNotificationsPlugin.show(
-      DateTime.now().millisecond,
-      title,
-      body,
-      notificationDetails,
-      payload: 
-        payload
-      ,
+      id:  DateTime.now().millisecond,
+      title:  title,
+      body: body,
+      notificationDetails: notificationDetails,
+      payload: payload,
     );
   }
 

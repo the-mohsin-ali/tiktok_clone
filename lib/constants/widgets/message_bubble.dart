@@ -4,8 +4,8 @@ import 'package:tiktok_clone/constants/widgets/video_thumbnail.dart';
 import 'package:tiktok_clone/models/enumns.dart';
 import 'package:tiktok_clone/models/message_model.dart';
 import 'package:tiktok_clone/models/user_model.dart';
-import 'package:tiktok_clone/view/inbox_view/chat/fullscreen_image_viewer.dart';
-import 'package:tiktok_clone/view/inbox_view/chat/fullscreen_video_viewer.dart';
+import 'package:tiktok_clone/features/inbox_view/chat/fullscreen_image_viewer.dart';
+import 'package:tiktok_clone/features/inbox_view/chat/fullscreen_video_viewer.dart';
 
 class MessageBubble extends StatelessWidget {
   final MessageModel message;

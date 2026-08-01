@@ -1,18 +1,20 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:tiktok_clone/bindings/app_bindings.dart';
 import 'package:tiktok_clone/constants/routes/app_routes.dart';
 import 'package:tiktok_clone/firebase_options.dart';
 import 'package:tiktok_clone/global.dart';
 import 'package:tiktok_clone/services/shared_prefs.dart';
-import 'package:tiktok_clone/view/SplashScreen.dart';
+import 'package:tiktok_clone/services/splash_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:tiktok_clone/view/feed/search/searched_profile.dart';
+import 'package:tiktok_clone/features/feed/search/searched_profile.dart';
+
+import 'constants/routes/routes_names.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -20,27 +22,24 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("BackGroundMessage: ${message.messageId}");
 }
 
-Future<void> requestNotificationPermission() async {
-  // Android 13+ (TIRAMISU / API 33) ke liye
-  if (await Permission.notification.isDenied) {
-    final status = await Permission.notification.request();
-    if (status.isGranted) {
-      print("✅ Notification permission granted");
-    } else {
-      print("❌ Notification permission denied");
-    }
-  }
-}
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  await requestNotificationPermission();
-
   await SharedPrefs.initPrefs();
+
+
+  final bool isLoggedIn = await SharedPrefs.getIsLoggedIn() ?? false;
+  final currentUser = FirebaseAuth.instance.currentUser;
+  final initialRoute = (isLoggedIn && currentUser != null)
+      ? RoutesNames.home
+      : RoutesNames.login;
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -48,7 +47,7 @@ void main() async {
   const InitializationSettings initSettings = InitializationSettings(android: androidInit);
 
   await flutterLocalNotificationsPlugin.initialize(
-    initSettings,
+    settings: initSettings,
     onDidReceiveNotificationResponse: (response) {
       final userId = response.payload;
       if (userId != null && userId.isNotEmpty) {
@@ -64,16 +63,20 @@ void main() async {
     notificationUserId = initialMessage.data['userId'];
   }
 
-  runApp(MyApp(notificationUserId: notificationUserId));
+  runApp(MyApp(initialRoute: initialRoute, notificationUserId: notificationUserId));
 }
 
 class MyApp extends StatelessWidget {
   final String? notificationUserId;
+  final String initialRoute;
 
-  const MyApp({super.key, this.notificationUserId});
+  const MyApp({super.key, this.notificationUserId, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => FlutterNativeSplash.remove());
+
     return ScreenUtilInit(
       builder: (context, child) => GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -84,7 +87,13 @@ class MyApp extends StatelessWidget {
         darkTheme: ThemeData.dark(),
         themeMode: ThemeMode.light,
         getPages: AppRoutes.routes,
-        home: Splashscreen(notificationUserId: notificationUserId),
+        // home: Splashscreen(notificationUserId: notificationUserId),
+        initialRoute: initialRoute,
+        routingCallback: (routing) {
+          if (routing?.current == RoutesNames.home && notificationUserId != null) {
+            SplashService.handleNotificationDeepLink(notificationUserId!);
+          }
+        },
       ),
     );
   }
